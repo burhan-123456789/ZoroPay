@@ -1,0 +1,4 @@
+SECRET_KEY=your-super-secret-key-change-this-in-production-12345
+TWILIO_SID=AC9a39f0178edcfe4f9aca8dae82e9e4b0
+TWILIO_AUTH=7ee2d914b938652f76decaf085a4d5c9
+TWILIO_PHONE=+12183575616
