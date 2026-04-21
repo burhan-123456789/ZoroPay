@@ -1,0 +1,120 @@
+{
+  "name": "Zoro Pay",
+  "short_name": "ZoroPay",
+  "description": "Digital Wallet Application - Secure & Instant Payments",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "theme_color": "#4F46E5",
+  "background_color": "#4F46E5",
+  "orientation": "portrait",
+  "categories": ["finance", "payments", "business"],
+  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/static/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Send Money",
+      "short_name": "Send",
+      "description": "Quickly send money",
+      "url": "/send",
+      "icons": [
+        {
+          "src": "/static/icon-72.png",
+          "sizes": "72x72"
+        },
+        {
+          "src": "/static/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Transaction History",
+      "short_name": "History",
+      "description": "View your transactions",
+      "url": "/all-transactions",
+      "icons": [
+        {
+          "src": "/static/icon-72.png",
+          "sizes": "72x72"
+        },
+        {
+          "src": "/static/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Cashback Vault",
+      "short_name": "Cashback",
+      "description": "View and claim cashback",
+      "url": "/cashback",
+      "icons": [
+        {
+          "src": "/static/icon-72.png",
+          "sizes": "72x72"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/screenshot.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Zoro Pay Dashboard"
+    }
+  ]
+}
