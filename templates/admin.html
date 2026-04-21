@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Admin Panel - Zoro Pay</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <div class="admin-header">
+            <h1>
+                <i class="fas fa-shield-alt"></i>
+                Zoro Pay Admin
+            </h1>
+            <div class="admin-user-info">
+                <span class="admin-badge"><i class="fas fa-user-shield"></i> Administrator</span>
+                <button onclick="adminLogout()" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="loading-state"><i class="fas fa-spinner fa-pulse"></i> Loading stats...</div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" data-tab="users">
+                <i class="fas fa-users"></i> Users
+            </button>
+            <button class="tab-btn" data-tab="transactions">
+                <i class="fas fa-exchange-alt"></i> Transactions
+            </button>
+            <button class="tab-btn" data-tab="fraud">
+                <i class="fas fa-shield-virus"></i> Fraud Logs
+            </button>
+            <button class="tab-btn" data-tab="analytics">
+                <i class="fas fa-chart-line"></i> Analytics
+            </button>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="usersTab" class="tab-content active">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="userSearch" placeholder="Search by name or phone...">
+            </div>
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Phone</th>
+                            <th>Balance</th>
+                            <th>Cashback</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable">
+                        <tr><td colspan="7" class="loading-state">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transactions Tab -->
+        <div id="transactionsTab" class="tab-content">
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Sender</th>
+                            <th>Receiver</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTable">
+                        <tr><td colspan="6" class="loading-state">Loading transactions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Fraud Logs Tab -->
+        <div id="fraudTab" class="tab-content">
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Type</th>
+                            <th>Details</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fraudTable">
+                        <tr><td colspan="5" class="loading-state">Loading fraud logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analyticsTab" class="tab-content">
+            <div class="stats-grid" style="margin-bottom: 24px;">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+                    <div class="stat-value" id="todayVolume">₹0</div>
+                    <div class="stat-label">Today's Volume</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-value" id="avgTransaction">₹0</div>
+                    <div class="stat-label">Avg Transaction</div>
+                </div>
+            </div>
+            <div class="table-container">
+                <canvas id="revenueChart" style="max-height: 300px; padding: 20px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Block/Unblock Confirmation Modal -->
+    <div id="confirmModal" class="admin-modal">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirm Action</h3>
+                <span class="admin-modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="admin-modal-body" id="modalBody">
+                Are you sure you want to perform this action?
+            </div>
+            <div class="admin-modal-footer">
+                <button class="action-btn action-btn-primary" onclick="closeModal()">Cancel</button>
+                <button class="action-btn action-btn-danger" id="modalConfirmBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let usersData = [];
+        let pendingAction = null;
+        let revenueChart = null;
+
+        // Helper Functions
+        function formatCurrency(amount) {
+            return '₹' + parseFloat(amount).toFixed(2);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // API Calls
+        async function apiCall(url, options = {}) {
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                window.location.href = '/admin/';
+                throw new Error('Unauthorized');
+            }
+            return response.json();
+        }
+
+        // Load Stats
+        async function loadStats() {
+            try {
+                const stats = await apiCall('/admin/api/stats');
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value">${stats.total_users}</div><div class="stat-label">Total Users</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-exchange-alt"></i></div><div class="stat-value">${stats.total_transactions}</div><div class="stat-label">Transactions</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-rupee-sign"></i></div><div class="stat-value">${formatCurrency(stats.total_volume)}</div><div class="stat-label">Total Volume</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-ban"></i></div><div class="stat-value">${stats.blocked_users}</div><div class="stat-label">Blocked Users</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-value">${stats.fraud_count}</div><div class="stat-label">Fraud Alerts</div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-calendar-day"></i></div><div class="stat-value">${formatCurrency(stats.today_volume)}</div><div class="stat-label">Today's Volume</div></div>
+                `;
+                document.getElementById('todayVolume').innerHTML = formatCurrency(stats.today_volume);
+                if (stats.total_transactions > 0) {
+                    document.getElementById('avgTransaction').innerHTML = formatCurrency(stats.total_volume / stats.total_transactions);
+                }
+                return stats;
+            } catch (error) {
+                console.error('Load stats error:', error);
+            }
+        }
+
+        // Load Users
+        async function loadUsers() {
+            try {
+                usersData = await apiCall('/admin/api/users');
+                renderUsers(usersData);
+            } catch (error) {
+                document.getElementById('usersTable').innerHTML = '<tr><td colspan="7" class="loading-state">Error loading users</td></tr>';
+            }
+        }
+
+        function renderUsers(users) {
+            const tbody = document.getElementById('usersTable');
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td><strong>${escapeHtml(user.name)}</strong></td>
+                    <td>${escapeHtml(user.phone)}</td>
+                    <td>${formatCurrency(user.balance)}</td>
+                    <td>${formatCurrency(user.cashback_earned)}</td>
+                    <td><span class="status-badge ${user.is_blocked ? 'status-blocked' : 'status-active'}">${user.is_blocked ? 'Blocked' : 'Active'}</span></td>
+                    <td>
+                        ${user.is_blocked ? 
+                            `<button class="action-btn action-btn-primary" onclick="showBlockConfirm(${user.id}, false, '${escapeHtml(user.name)}')"><i class="fas fa-check-circle"></i> Unblock</button>` :
+                            `<button class="action-btn action-btn-danger" onclick="showBlockConfirm(${user.id}, true, '${escapeHtml(user.name)}')"><i class="fas fa-ban"></i> Block</button>`
+                        }
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Load Transactions
+        async function loadTransactions() {
+            try {
+                const transactions = await apiCall('/admin/api/transactions');
+                const tbody = document.getElementById('transactionsTable');
+                if (!transactions || transactions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No transactions found</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = transactions.map(txn => `
+                    <tr>
+                        <td><small>${txn.id}</small></td>
+                        <td>${escapeHtml(txn.sender_name)}</td>
+                        <td>${escapeHtml(txn.receiver_name)}</td>
+                        <td><strong>${formatCurrency(txn.amount)}</strong></td>
+                        <td><small>${new Date(txn.created_at).toLocaleString()}</small></td>
+                        <td><span class="status-badge status-active">${txn.status}</span></td>
+                    </tr>
+                `).join('');
+                
+                // Update chart with transaction data
+                updateChart(transactions);
+            } catch (error) {
+                console.error('Load transactions error:', error);
+            }
+        }
+
+        // Load Fraud Logs
+        async function loadFraudLogs() {
+            try {
+                const logs = await apiCall('/admin/api/fraud_logs');
+                const tbody = document.getElementById('fraudTable');
+                if (!logs || logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No fraud logs found</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = logs.map(log => `
+                    <tr>
+                        <td><strong>${escapeHtml(log.user_name)}</strong><br><small>${escapeHtml(log.user_phone)}</small></td>
+                        <td><span class="status-badge status-blocked">${escapeHtml(log.type)}</span></td>
+                        <td>${escapeHtml(log.details)}</td>
+                        <td>${log.amount > 0 ? formatCurrency(log.amount) : '-'}</td>
+                        <td><small>${new Date(log.created_at).toLocaleString()}</small></td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Load fraud logs error:', error);
+            }
+        }
+
+        // Update Revenue Chart
+        function updateChart(transactions) {
+            if (!transactions || transactions.length === 0) return;
+            
+            // Group by date
+            const dailyData = {};
+            transactions.forEach(txn => {
+                const date = new Date(txn.created_at).toLocaleDateString();
+                dailyData[date] = (dailyData[date] || 0) + txn.amount;
+            });
+            
+            const labels = Object.keys(dailyData).slice(0, 14).reverse();
+            const data = Object.values(dailyData).slice(0, 14).reverse();
+            
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChart) revenueChart.destroy();
+            
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Transaction Volume (₹)',
+                        data: data,
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#818cf8',
+                        pointBorderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { labels: { color: '#9ca3af' } }
+                    },
+                    scales: {
+                        y: { 
+                            ticks: { color: '#9ca3af', callback: v => '₹' + v },
+                            grid: { color: '#1e1e2c' }
+                        },
+                        x: { 
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: '#1e1e2c' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Block/Unblock User
+        function showBlockConfirm(userId, shouldBlock, userName) {
+            pendingAction = { userId, shouldBlock, userName };
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `Are you sure you want to ${shouldBlock ? 'BLOCK' : 'UNBLOCK'} <strong>${escapeHtml(userName)}</strong>?`;
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            confirmBtn.className = shouldBlock ? 'action-btn action-btn-danger' : 'action-btn action-btn-primary';
+            confirmBtn.innerHTML = shouldBlock ? '<i class="fas fa-ban"></i> Block User' : '<i class="fas fa-check-circle"></i> Unblock User';
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        async function executeBlockAction() {
+            if (!pendingAction) return;
+            const { userId, shouldBlock, userName } = pendingAction;
+            const endpoint = shouldBlock ? 'block' : 'unblock';
+            try {
+                await apiCall(`/admin/api/users/${userId}/${endpoint}`, { method: 'POST' });
+                closeModal();
+                loadUsers();
+                loadStats();
+                showToast(`User ${shouldBlock ? 'blocked' : 'unblocked'} successfully!`, 'success');
+            } catch (error) {
+                showToast('Action failed', 'error');
+            }
+            pendingAction = null;
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            pendingAction = null;
+        }
+
+        // Search Users
+        function setupSearch() {
+            const searchInput = document.getElementById('userSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const filtered = usersData.filter(user => 
+                        user.name.toLowerCase().includes(term) || 
+                        user.phone.includes(term)
+                    );
+                    renderUsers(filtered);
+                });
+            }
+        }
+
+        // Tab Switching
+        function setupTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    const tab = btn.dataset.tab;
+                    document.getElementById(`${tab}Tab`).classList.add('active');
+                    
+                    if (tab === 'users') loadUsers();
+                    if (tab === 'transactions') loadTransactions();
+                    if (tab === 'fraud') loadFraudLogs();
+                    if (tab === 'analytics') loadStats();
+                });
+            });
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : '#ef4444'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 12px;
+                z-index: 3000;
+                animation: fadeInUp 0.3s ease;
+                font-size: 0.85rem;
+            `;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Logout
+        async function adminLogout() {
+            try {
+                await apiCall('/admin/logout', { method: 'POST' });
+                window.location.href = '/admin/';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadUsers();
+            loadTransactions();
+            loadFraudLogs();
+            setupSearch();
+            setupTabs();
+        });
+
+        // Make functions global
+        window.showBlockConfirm = showBlockConfirm;
+        window.closeModal = closeModal;
+        window.executeBlockAction = executeBlockAction;
+        window.adminLogout = adminLogout;
+        
+        // Modal confirm button handler
+        document.getElementById('modalConfirmBtn').addEventListener('click', executeBlockAction);
+    </script>
+</body>
+</html>

@@ -1,0 +1,380 @@
+{% extends "base.html" %} {% block title %}Profile - Zoro Pay{% endblock %} {%
+block extra_styles %}
+<style>
+  .profile-card {
+    margin: 0 0 24px;
+    background: #0c0c0c;
+    border-radius: 36px;
+    overflow: hidden;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.8);
+  }
+  .user-info {
+    text-align: center;
+    padding: 32px 20px 28px;
+    background: radial-gradient(ellipse at 50% 0%, #0f172a, #000000);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.25);
+  }
+  .user-avatar {
+    width: 104px;
+    height: 104px;
+    background: linear-gradient(145deg, #1e2a47, #0a0f1f);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+    box-shadow:
+      0 12px 24px -8px rgba(0, 0, 0, 0.6),
+      0 0 0 3px rgba(59, 130, 246, 0.3);
+    font-weight: 700;
+    font-size: 48px;
+    text-transform: uppercase;
+  }
+  .user-info h3 {
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(to right, #fff, #94a3f8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .balance-badge {
+    background: rgba(59, 130, 246, 0.15);
+    padding: 6px 16px;
+    border-radius: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    border: 0.5px solid rgba(59, 130, 246, 0.4);
+  }
+  .qr-section {
+    text-align: center;
+    padding: 28px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: #080808;
+  }
+  .qr-container {
+    display: flex;
+    justify-content: center;
+    margin: 12px 0 18px;
+    min-height: 220px;
+  }
+  .qr-container img {
+    max-width: 180px;
+    width: 100%;
+    height: auto;
+    border-radius: 24px;
+    background: white;
+    padding: 12px;
+    box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.6);
+  }
+  .qr-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .btn-secondary {
+    background: rgba(59, 130, 246, 0.08);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    padding: 10px 20px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .referral-section {
+    padding: 24px 20px 28px;
+    background: #050505;
+  }
+  .referral-code {
+    background: #121212;
+    padding: 14px 18px;
+    border-radius: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 14px 0 20px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  .referral-code span {
+    font-family: monospace;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #60a5fa;
+  }
+  .btn-small {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 32px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .referral-stats {
+    background: #0f0f0f;
+    border-radius: 28px;
+    padding: 18px 20px;
+    margin-top: 16px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+  }
+  .stat-item:first-child {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .stat-label {
+    color: #cbd5e6;
+    font-size: 15px;
+  }
+  .stat-value {
+    font-weight: 700;
+    color: #60a5fa;
+    font-size: 18px;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <div class="page-header">
+    <button class="icon-btn" onclick="history.back()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1 style="font-size: 1.5rem"><i class="fas fa-bolt"></i> Zoro Profile</h1>
+    <div style="width: 44px"></div>
+  </div>
+
+  <div class="profile-card">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <h3 id="userName">Loading...</h3>
+      <div class="balance-badge">
+        <i class="fas fa-coins"></i>
+        <span id="userBalance">₹0.00</span>
+      </div>
+    </div>
+
+    <div class="qr-section">
+      <h4><i class="fas fa-qrcode"></i> Scan & Pay</h4>
+      <p style="font-size: 13px; color: #9ca3af; margin-bottom: 24px">
+        Instant transfer — zero fees
+      </p>
+      <div class="qr-container" id="qrContainer">
+        <img id="qrCode" alt="Your QR Code" style="display: none" />
+        <div
+          id="qrLoading"
+          style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 180px;
+            height: 180px;
+            background: #111;
+            border-radius: 24px;
+          "
+        >
+          <i
+            class="fas fa-circle-notch fa-spin fa-2x"
+            style="color: #3b82f6"
+          ></i>
+        </div>
+      </div>
+      <div class="qr-actions">
+        <button onclick="downloadQR()" class="btn-secondary">
+          <i class="fas fa-download"></i> Save
+        </button>
+        <button onclick="shareQR()" class="btn-secondary">
+          <i class="fas fa-share-nodes"></i> Share
+        </button>
+      </div>
+    </div>
+
+    <div class="referral-section">
+      <h4><i class="fas fa-hand-holding-heart"></i> Invite & Earn</h4>
+      <p style="font-size: 13px; color: #9ca3af; margin-bottom: 20px">
+        ₹250 bonus for each friend who joins. Unlimited rewards.
+      </p>
+      <div class="referral-code">
+        <span id="referralCode">------</span>
+        <button onclick="copyReferralCode()" class="btn-small">
+          <i class="fas fa-copy"></i> Copy
+        </button>
+      </div>
+      <div class="referral-stats">
+        <div class="stat-item">
+          <span class="stat-label"
+            ><i class="fas fa-user-plus"></i> Total referrals</span
+          >
+          <span id="referralCount" class="stat-value">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label"
+            ><i class="fas fa-gift"></i> Bonus earned</span
+          >
+          <span id="referralBonus" class="stat-value">₹0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script>
+  let mockUser = {
+    name: "User",
+    phone: "+91 98765 43210",
+    balance: 0,
+    referral_code: "ZORO250",
+    referral_count: 0,
+    referral_bonus: 0,
+  };
+
+  function getProfileShareLink() {
+    return `${window.location.origin}?ref=${mockUser.referral_code}`;
+  }
+
+  function generateQRImageUrl() {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(getProfileShareLink())}&margin=10`;
+  }
+
+  async function loadUserData() {
+    try {
+      const response = await fetch("/api/user");
+      if (response.status === 401) {
+        window.location.href = "/";
+        return;
+      }
+      const user = await response.json();
+      mockUser = { ...mockUser, ...user };
+      document.getElementById("userName").textContent =
+        mockUser.name || "Zoro User";
+      document.getElementById("userBalance").textContent =
+        window.formatCurrency(mockUser.balance || 0);
+      document.getElementById("referralCode").textContent =
+        mockUser.referral_code;
+
+      const avatarDiv = document.getElementById("userAvatar");
+      if (mockUser.name) {
+        const initial = mockUser.name.charAt(0).toUpperCase();
+        avatarDiv.innerHTML = `<span style="font-size: 48px; font-weight: 700;">${initial}</span>`;
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  }
+
+  async function loadReferralStats() {
+    try {
+      const response = await fetch("/api/referral_stats");
+      if (response.ok) {
+        const stats = await response.json();
+        document.getElementById("referralCount").textContent =
+          stats.referral_count || 0;
+        document.getElementById("referralBonus").textContent =
+          window.formatCurrency(stats.referral_bonus || 0);
+      }
+    } catch (error) {
+      console.error("Error loading referral stats:", error);
+    }
+  }
+
+  function loadQRCode() {
+    const qrImg = document.getElementById("qrCode");
+    const loadingDiv = document.getElementById("qrLoading");
+    const qrUrl = generateQRImageUrl();
+    qrImg.src = qrUrl + "&t=" + new Date().getTime();
+    qrImg.onload = function () {
+      qrImg.style.display = "block";
+      loadingDiv.style.display = "none";
+    };
+  }
+
+  function downloadQR() {
+    const qrImg = document.getElementById("qrCode");
+    if (qrImg && qrImg.src) {
+      const link = document.createElement("a");
+      link.download = "zoropay_qr.png";
+      link.href = qrImg.src;
+      link.click();
+      window.showNotification("QR saved to gallery", "success");
+    } else {
+      window.showNotification("Wait, QR is loading...", "error");
+    }
+  }
+
+  function shareQR() {
+    const shareMessage = `🔥 Join me on Zoro Pay — India's fastest digital wallet! Use code ${mockUser.referral_code} to get ₹100 welcome bonus + earn ₹250 per referral. Download now: ${getProfileShareLink()}`;
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title: "Zoro Pay - Invite & Earn",
+          text: shareMessage,
+          url: getProfileShareLink(),
+        })
+        .catch(() => fallbackCopyText(shareMessage));
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareMessage).then(() => {
+        window.showNotification(
+          "Invite link copied! Share with friends.",
+          "success",
+        );
+      });
+    } else {
+      fallbackCopyText(shareMessage);
+    }
+  }
+
+  function fallbackCopyText(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.top = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    window.showNotification(
+      "Link copied! Share & earn ₹250/referral",
+      "success",
+    );
+  }
+
+  function copyReferralCode() {
+    const code = document.getElementById("referralCode").textContent;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(() => {
+        window.showNotification(
+          `Code ${code} copied! Share to earn ₹250/referral`,
+          "success",
+        );
+      });
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = code;
+      textarea.style.position = "fixed";
+      textarea.style.top = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      window.showNotification(`Code ${code} copied!`, "success");
+    }
+  }
+
+  loadUserData();
+  loadReferralStats();
+  loadQRCode();
+</script>
+{% endblock %}

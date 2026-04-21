@@ -1,0 +1,1045 @@
+{% extends "base.html" %} {% block title %}Transaction History - Zoro Pay{%
+endblock %} {% block extra_styles %}
+<style>
+  .profile-header {
+    background: linear-gradient(145deg, #1e1e30, #0f0f1a);
+    border-radius: 1.8rem;
+    padding: 1.5rem;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    border: 1px solid rgba(79, 70, 229, 0.3);
+  }
+  .user-avatar {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(145deg, #4f46e5, #7c3aed);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+  }
+  .user-avatar.external {
+    background: linear-gradient(145deg, #6b7280, #4b5563);
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    margin-top: 6px;
+  }
+  .badge.external {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+  }
+  .badge i {
+    margin-right: 4px;
+  }
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    flex: 1;
+    background: rgba(18, 18, 28, 0.7);
+    backdrop-filter: blur(12px);
+    border-radius: 1.2rem;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid rgba(79, 70, 229, 0.3);
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+  .stat-card.sent .stat-value {
+    color: #f43f5e;
+  }
+  .stat-card.received .stat-value {
+    color: #10b981;
+  }
+  .stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .txn-list {
+    background: rgba(18, 18, 28, 0.5);
+    border-radius: 1.5rem;
+    padding: 0.5rem;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+  .txn-item {
+    background: #0f0f17;
+    border-radius: 1.2rem;
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+  }
+  .txn-item:hover {
+    background: #14141f;
+    transform: translateX(4px);
+  }
+  .txn-item.sent {
+    border-left-color: #f43f5e;
+  }
+  .txn-item.received {
+    border-left-color: #10b981;
+  }
+  .txn-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .txn-counterparty {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .txn-date {
+    font-size: 0.7rem;
+    color: #6b7280;
+  }
+  .txn-amount {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  .txn-amount.sent {
+    color: #f43f5e;
+  }
+  .txn-amount.received {
+    color: #10b981;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 2rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(95deg, #4f46e5, #6366f1);
+    color: white;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  }
+  .btn-secondary {
+    background: #1e1e2c;
+    color: #cbd5e1;
+    border: 1px solid #4f46e5;
+  }
+  .btn-secondary:hover {
+    background: #2d2d44;
+  }
+
+  /* Add Contact Button Styles */
+  .add-contact-section {
+    background: linear-gradient(135deg, #1a1a2e, #0f0f17);
+    border-radius: 1.2rem;
+    padding: 1rem;
+    margin-bottom: 20px;
+    border: 1px solid rgba(79, 70, 229, 0.3);
+    animation: slideDown 0.3s ease;
+  }
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .add-contact-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .add-contact-header h4 {
+    font-size: 0.9rem;
+    color: #fbbf24;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .add-contact-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .add-contact-form input {
+    flex: 2;
+    padding: 10px 14px;
+    background: #0a0a10;
+    border: 1.5px solid #2d2d44;
+    border-radius: 2rem;
+    color: white;
+    font-size: 0.85rem;
+  }
+  .add-contact-form input:focus {
+    outline: none;
+    border-color: #4f46e5;
+  }
+  .btn-add-contact {
+    background: linear-gradient(95deg, #10b981, #059669);
+    border: none;
+    padding: 10px 18px;
+    border-radius: 2rem;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+  }
+  .btn-add-contact:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  }
+  .btn-cancel-contact {
+    background: #1e1e2c;
+    border: 1px solid #ef4444;
+    padding: 10px 18px;
+    border-radius: 2rem;
+    color: #ef4444;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+  }
+  .btn-cancel-contact:hover {
+    background: #ef4444;
+    color: white;
+  }
+  .contact-added-success {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid #10b981;
+    border-radius: 1rem;
+    padding: 10px;
+    text-align: center;
+    color: #10b981;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Modal Styles */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(12px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    animation: modalFadeIn 0.3s ease;
+  }
+  @keyframes modalFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .modal-content {
+    background: #111118;
+    border-radius: 2rem;
+    max-width: 420px;
+    width: 90%;
+    border: 1px solid #4f46e5;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    animation: modalSlideUp 0.3s ease;
+  }
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .modal-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid #26263a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #1a1a2e, #0f0f17);
+    border-radius: 2rem 2rem 0 0;
+  }
+  .modal-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #e2e8f0;
+  }
+  .modal-header h3 i {
+    color: #4f46e5;
+  }
+  .modal-close {
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #9ca3af;
+    transition: all 0.2s ease;
+    line-height: 1;
+  }
+  .modal-close:hover {
+    color: #ef4444;
+    transform: scale(1.1);
+  }
+  .modal-body {
+    padding: 20px;
+  }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #1e1e2c;
+  }
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+  .detail-label {
+    color: #9ca3af;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .detail-label i {
+    width: 20px;
+    color: #4f46e5;
+  }
+  .detail-value {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    word-break: break-word;
+    text-align: right;
+    max-width: 60%;
+  }
+  .detail-value.amount-sent {
+    color: #f43f5e;
+  }
+  .detail-value.amount-received {
+    color: #10b981;
+  }
+  .detail-value.status-success {
+    color: #10b981;
+  }
+  .detail-value.status-pending {
+    color: #fbbf24;
+  }
+  .detail-value.status-failed {
+    color: #ef4444;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .status-badge.success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+  }
+  .status-badge.pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+  }
+  .status-badge.failed {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+  }
+  .modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #1e1e2c;
+  }
+  .modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 2rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+  }
+  .modal-btn:hover {
+    transform: translateY(-2px);
+  }
+  .modal-btn:active {
+    transform: translateY(0);
+  }
+  .modal-btn-share {
+    background: linear-gradient(95deg, #3b82f6, #2563eb);
+    color: white;
+  }
+  .modal-btn-download {
+    background: #1e1e2c;
+    color: white;
+    border: 1px solid #4f46e5;
+  }
+  .modal-btn-download:hover {
+    background: #2d2d44;
+    border-color: #6366f1;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+  }
+  .loading-state {
+    text-align: center;
+    padding: 30px;
+    color: #9ca3af;
+  }
+
+  /* Scrollbar */
+  .txn-list::-webkit-scrollbar {
+    width: 4px;
+  }
+  .txn-list::-webkit-scrollbar-track {
+    background: #1e1e2a;
+    border-radius: 10px;
+  }
+  .txn-list::-webkit-scrollbar-thumb {
+    background: #4f46e5;
+    border-radius: 10px;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <div class="page-header">
+    <button class="icon-btn" onclick="history.back()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1>Transaction History</h1>
+    <div style="width: 44px"></div>
+  </div>
+
+  <div class="profile-header">
+    <div class="user-avatar" id="userAvatar">👤</div>
+    <div>
+      <h2 id="userName">Loading...</h2>
+      <p id="userPhone" style="color: #9ca3af; font-size: 0.8rem">-</p>
+      <span class="badge" id="userBadge"><i class="fas fa-check-circle"></i> Zoro User</span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card sent">
+      <div class="stat-label">Total Sent</div>
+      <div class="stat-value" id="totalSent">₹0</div>
+    </div>
+    <div class="stat-card received">
+      <div class="stat-label">Total Received</div>
+      <div class="stat-value" id="totalReceived">₹0</div>
+    </div>
+  </div>
+
+  <!-- Add to Contact Section (shown only for external/non-contact users) -->
+  <div id="addContactSection" class="add-contact-section" style="display: none;">
+    <div class="add-contact-header">
+      <h4><i class="fas fa-user-plus"></i> Add to Contacts</h4>
+    </div>
+    <div id="addContactForm">
+      <div class="add-contact-form">
+        <input type="text" id="contactNameInput" placeholder="Enter name for this contact" autocomplete="off">
+        <button class="btn-add-contact" onclick="addToContacts()">
+          <i class="fas fa-save"></i> Save Contact
+        </button>
+        <button class="btn-cancel-contact" onclick="hideAddContactSection()">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+      </div>
+    </div>
+    <div id="contactSuccessMsg" style="display: none;" class="contact-added-success">
+      <i class="fas fa-check-circle"></i> Contact added successfully!
+    </div>
+  </div>
+
+  <div class="txn-list" id="txnList">
+    <div class="loading-state">
+      <i class="fas fa-spinner fa-pulse"></i> Loading transactions...
+    </div>
+  </div>
+
+  <div class="action-buttons">
+    <button class="btn btn-primary" id="sendBtn">
+      <i class="fas fa-paper-plane"></i> Send Money
+    </button>
+    <button class="btn btn-secondary" id="requestBtn">
+      <i class="fas fa-hand-holding-usd"></i> Request
+    </button>
+  </div>
+</div>
+
+<!-- Transaction Details Modal -->
+<div id="txnModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas fa-receipt"></i> Transaction Details</h3>
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <!-- Dynamic content will be inserted here -->
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script>
+  let otherUser = null,
+    allTx = [],
+    currentTransaction = null,
+    isUserRegistered = false,
+    isContactExists = false,
+    contactId = null;
+
+  async function loadData() {
+    const stored = sessionStorage.getItem("selectedUser");
+    if (stored) otherUser = JSON.parse(stored);
+
+    if (!otherUser) {
+      const urlParts = window.location.pathname.split("/");
+      const identifier = urlParts[urlParts.length - 1];
+      if (identifier && identifier !== "transaction-history") {
+        await fetchUserInfo(identifier);
+      }
+    } else {
+      await verifyUserRegistration();
+      await checkIfContactExists();
+    }
+
+    if (otherUser) {
+      updateUserProfile();
+    }
+
+    await loadTransactions();
+    updateAddContactSectionVisibility();
+  }
+
+  async function fetchUserInfo(identifier) {
+    try {
+      const res = await fetch("/api/find_user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: decodeURIComponent(identifier) }),
+      });
+      const data = await res.json();
+      
+      if (data.exists) {
+        otherUser = { 
+          name: data.name, 
+          phone: data.phone,
+          upi_id: data.upi_id,
+          is_registered: true
+        };
+        isUserRegistered = true;
+      } else {
+        // External user - not registered with Zoro Pay
+        otherUser = { 
+          name: identifier, 
+          phone: identifier,
+          is_registered: false
+        };
+        isUserRegistered = false;
+      }
+      
+      await checkIfContactExists();
+    } catch (e) {
+      console.error("Error fetching user info:", e);
+      otherUser = { 
+        name: identifier, 
+        phone: identifier,
+        is_registered: false
+      };
+      isUserRegistered = false;
+      await checkIfContactExists();
+    }
+  }
+
+  async function verifyUserRegistration() {
+    if (otherUser && otherUser.phone) {
+      try {
+        const res = await fetch("/api/find_user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: otherUser.phone }),
+        });
+        const data = await res.json();
+        isUserRegistered = data.exists;
+        otherUser.is_registered = isUserRegistered;
+      } catch (e) {
+        isUserRegistered = false;
+        otherUser.is_registered = false;
+      }
+    }
+  }
+
+  async function checkIfContactExists() {
+    if (!otherUser || !otherUser.phone) return;
+    
+    try {
+      const res = await fetch("/api/contacts");
+      const contacts = await res.json();
+      
+      const phoneNumber = otherUser.phone.replace(/[\s\-\(\)]/g, '');
+      const existingContact = contacts.find(c => {
+        const contactPhone = c.phone.replace(/[\s\-\(\)]/g, '');
+        return contactPhone === phoneNumber;
+      });
+      
+      if (existingContact) {
+        isContactExists = true;
+        contactId = existingContact.id;
+      } else {
+        isContactExists = false;
+        contactId = null;
+      }
+    } catch (e) {
+      console.error("Error checking contacts:", e);
+      isContactExists = false;
+    }
+  }
+
+  function updateAddContactSectionVisibility() {
+    const section = document.getElementById("addContactSection");
+    
+    // Show add contact section only if:
+    // 1. User exists (otherUser is set)
+    // 2. User is not registered OR user is not already in contacts
+    // 3. Not showing for self (but we already handle self elsewhere)
+    if (otherUser && !isContactExists && otherUser.phone) {
+      section.style.display = "block";
+      document.getElementById("contactNameInput").value = otherUser.name || "";
+    } else {
+      section.style.display = "none";
+    }
+  }
+
+  function hideAddContactSection() {
+    document.getElementById("addContactSection").style.display = "none";
+  }
+
+  async function addToContacts() {
+    const name = document.getElementById("contactNameInput").value.trim();
+    let phone = otherUser.phone;
+    
+    if (!name) {
+      window.showNotification("Please enter a name for this contact", "error");
+      return;
+    }
+    
+    if (!phone) {
+      window.showNotification("Phone number not available", "error");
+      return;
+    }
+    
+    // Clean phone number
+    phone = phone.replace(/[\s\-\(\)]/g, '');
+    if (!phone.startsWith('+')) {
+      if (phone.length === 10) phone = '+91' + phone;
+      else phone = '+' + phone;
+    }
+    
+    try {
+      const res = await fetch("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone, name: name })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        isContactExists = true;
+        
+        // Show success message
+        const formDiv = document.getElementById("addContactForm");
+        const successDiv = document.getElementById("contactSuccessMsg");
+        formDiv.style.display = "none";
+        successDiv.style.display = "block";
+        
+        window.showNotification(`${name} added to your contacts!`, "success");
+        
+        // Hide the section after 2 seconds
+        setTimeout(() => {
+          document.getElementById("addContactSection").style.display = "none";
+        }, 2000);
+        
+        // Refresh contact list in session storage for other pages
+        sessionStorage.setItem('contacts_updated', Date.now().toString());
+      } else {
+        const error = await res.json();
+        window.showNotification(error.error || "Failed to add contact", "error");
+      }
+    } catch (e) {
+      console.error("Error adding contact:", e);
+      window.showNotification("Network error. Please try again.", "error");
+    }
+  }
+
+  function updateUserProfile() {
+    const name = otherUser.name || (otherUser.phone ? formatPhoneShort(otherUser.phone) : "Unknown User");
+    const phone = otherUser.phone || "-";
+    
+    document.getElementById("userName").innerText = name;
+    document.getElementById("userPhone").innerText = formatPhoneDisplay(phone);
+    
+    const initial = name.charAt(0).toUpperCase();
+    const avatarDiv = document.getElementById("userAvatar");
+    avatarDiv.innerHTML = initial;
+    
+    const badgeSpan = document.getElementById("userBadge");
+    
+    if (isUserRegistered) {
+      badgeSpan.innerHTML = '<i class="fas fa-check-circle"></i> Zoro Pay User';
+      badgeSpan.className = "badge";
+      avatarDiv.style.background = "linear-gradient(145deg, #4f46e5, #7c3aed)";
+    } else {
+      badgeSpan.innerHTML = '<i class="fas fa-external-link-alt"></i> External User (Not on Zoro Pay)';
+      badgeSpan.className = "badge external";
+      avatarDiv.style.background = "linear-gradient(145deg, #6b7280, #4b5563)";
+    }
+  }
+
+  function formatPhoneShort(phone) {
+    if (!phone) return "";
+    let p = phone;
+    if (p.startsWith("+91")) p = p.substring(3);
+    if (p.length > 10) p = p.slice(-10);
+    return p;
+  }
+
+  function formatPhoneDisplay(phone) {
+    if (!phone) return "-";
+    if (phone.startsWith("+")) return phone;
+    if (phone.length === 10) return `+91 ${phone.slice(0, 5)} ${phone.slice(5)}`;
+    return phone;
+  }
+
+  async function loadTransactions() {
+    try {
+      const res = await fetch("/api/transactions");
+      if (res.status === 401) {
+        window.location.href = "/";
+        return;
+      }
+      const allTransactions = await res.json();
+
+      if (otherUser && otherUser.phone) {
+        const userPhone = otherUser.phone;
+        allTx = allTransactions.filter(
+          (t) => 
+            (t.sender_phone === userPhone || t.receiver_phone === userPhone) ||
+            (t.sender_phone && t.sender_phone.includes(userPhone)) ||
+            (t.receiver_phone && t.receiver_phone.includes(userPhone))
+        );
+      } else {
+        allTx = allTransactions;
+      }
+
+      updateStats();
+      renderTransactions();
+    } catch (e) {
+      console.error("Error loading transactions:", e);
+      document.getElementById("txnList").innerHTML =
+        '<div class="empty-state">Error loading transactions</div>';
+    }
+  }
+
+  function updateStats() {
+    let sent = 0,
+      received = 0;
+    allTx.forEach((t) => {
+      if (t.is_sent) sent += t.amount;
+      else received += t.amount;
+    });
+    document.getElementById("totalSent").innerHTML =
+      window.formatCurrency(sent);
+    document.getElementById("totalReceived").innerHTML =
+      window.formatCurrency(received);
+  }
+
+  function renderTransactions() {
+    if (!allTx.length) {
+      document.getElementById("txnList").innerHTML =
+        '<div class="empty-state"><i class="fas fa-exchange-alt"></i><p>No transactions with this user</p><small>Send money to see transaction history</small></div>';
+      return;
+    }
+
+    document.getElementById("txnList").innerHTML = allTx
+      .map((t) => {
+        const isSent = t.is_sent;
+        const counterparty = isSent
+          ? t.receiver_name || t.receiver_phone || "User"
+          : t.sender_name || t.sender_phone || "User";
+        const date = new Date(t.created_at).toLocaleDateString();
+        const time = new Date(t.created_at).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        return `<div class="txn-item ${isSent ? "sent" : "received"}" onclick='showDetail(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                        <div class="txn-left">
+                            <div class="txn-counterparty">${window.escapeHtml(counterparty)}</div>
+                            <div class="txn-date">${date} • ${time}</div>
+                        </div>
+                        <div class="txn-amount ${isSent ? "sent" : "received"}">
+                            ${isSent ? "-" : "+"} ${window.formatCurrency(t.amount)}
+                        </div>
+                    </div>`;
+      })
+      .join("");
+  }
+
+  function getStatusBadge(status) {
+    const statusClass =
+      status === "success"
+        ? "success"
+        : status === "pending"
+          ? "pending"
+          : "failed";
+    const icon =
+      status === "success"
+        ? "fa-check-circle"
+        : status === "pending"
+          ? "fa-clock"
+          : "fa-times-circle";
+    return `<span class="status-badge ${statusClass}"><i class="fas ${icon}"></i> ${status.toUpperCase()}</span>`;
+  }
+
+  function showDetail(transaction) {
+    currentTransaction = transaction;
+    const isSent = transaction.is_sent;
+    const counterparty = isSent
+      ? transaction.receiver_name || transaction.receiver_phone || "User"
+      : transaction.sender_name || transaction.sender_phone || "User";
+    const counterpartyPhone = isSent
+      ? transaction.receiver_phone
+      : transaction.sender_phone;
+    const date = new Date(transaction.created_at);
+    const formattedDate = date.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    const formattedTime = date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    const amountClass = isSent ? "amount-sent" : "amount-received";
+    const amountPrefix = isSent ? "-" : "+";
+
+    document.getElementById("modalBody").innerHTML = `
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-hashtag"></i> Transaction ID</div>
+                <div class="detail-value"><small>${transaction.id}</small></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-calendar-alt"></i> Date & Time</div>
+                <div class="detail-value">
+                    <div>${formattedDate}</div>
+                    <div style="font-size:0.7rem; color:#6b7280;">${formattedTime}</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas ${isSent ? "fa-arrow-up" : "fa-arrow-down"}"></i> ${isSent ? "Paid To" : "Received From"}</div>
+                <div class="detail-value">
+                    <div><strong>${window.escapeHtml(counterparty)}</strong></div>
+                    ${counterpartyPhone ? `<div style="font-size:0.7rem; color:#6b7280;">${window.escapeHtml(counterpartyPhone)}</div>` : ""}
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-rupee-sign"></i> Amount</div>
+                <div class="detail-value ${amountClass}" style="font-size:1.2rem; font-weight:800;">
+                    ${amountPrefix} ${window.formatCurrency(transaction.amount)}
+                </div>
+            </div>
+            ${
+              transaction.note
+                ? `
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-sticky-note"></i> Note</div>
+                <div class="detail-value">${window.escapeHtml(transaction.note)}</div>
+            </div>
+            `
+                : ""
+            }
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-info-circle"></i> Status</div>
+                <div class="detail-value">${getStatusBadge(transaction.status || "success")}</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-share" onclick="shareTransactionFromModal()">
+                    <i class="fas fa-share-alt"></i> Share
+                </button>
+                <button class="modal-btn modal-btn-download" onclick="downloadReceiptFromModal('${transaction.id}')">
+                    <i class="fas fa-download"></i> Receipt
+                </button>
+            </div>
+        `;
+    document.getElementById("txnModal").style.display = "flex";
+  }
+
+  function getShareMessageForTransaction(t) {
+    const isSent = t.is_sent;
+    const counterparty = isSent
+      ? t.receiver_name || t.receiver_phone || "User"
+      : t.sender_name || t.sender_phone || "User";
+    const date = new Date(t.created_at).toLocaleString();
+    let msg = `💰 ZORO PAY TRANSACTION\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `${isSent ? "💸 SENT" : "✅ RECEIVED"}\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `Amount: ${window.formatCurrency(t.amount)}\n`;
+    msg += `${isSent ? "To" : "From"}: ${counterparty}\n`;
+    msg += `ID: ${t.id}\n`;
+    msg += `📅 ${date}\n`;
+    if (t.note && t.note.trim()) {
+      msg += `Note: ${t.note.substring(0, 40)}\n`;
+    }
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `Thank you for using Zoro Pay!`;
+    return msg;
+  }
+
+  async function shareTransactionFromModal() {
+    if (!currentTransaction) return;
+    const message = getShareMessageForTransaction(currentTransaction);
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Zoro Pay Transaction", text: message });
+        return;
+      } catch (e) {}
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(message);
+      window.showNotification("📋 Copied to clipboard!", "success");
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = message;
+      textarea.style.position = "fixed";
+      textarea.style.top = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      window.showNotification("📋 Copied to clipboard!", "success");
+    }
+  }
+
+  function downloadReceiptFromModal(transactionId) {
+    window.location.href = `/api/download_receipt/${transactionId}`;
+    window.showNotification("📄 Downloading receipt...", "success");
+  }
+
+  function closeModal() {
+    document.getElementById("txnModal").style.display = "none";
+    currentTransaction = null;
+  }
+
+  document.getElementById("sendBtn").onclick = () => {
+    if (otherUser?.phone) {
+      sessionStorage.setItem(
+        "pendingTransaction",
+        JSON.stringify({
+          identifier: otherUser.phone,
+          amount: 0,
+          note: "",
+          is_external: !isUserRegistered
+        }),
+      );
+    }
+    window.location.href = "/send";
+  };
+
+  document.getElementById("requestBtn").onclick = () => {
+    if (otherUser?.phone) {
+      window.location.href = `/send?requestFrom=${encodeURIComponent(otherUser.phone)}`;
+    } else {
+      window.location.href = "/send";
+    }
+  };
+
+  // Close modal when clicking outside
+  window.onclick = function (event) {
+    const modal = document.getElementById("txnModal");
+    if (event.target === modal) {
+      closeModal();
+    }
+  };
+
+  // Close modal on Escape key
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeModal();
+    }
+  });
+
+  window.closeModal = closeModal;
+  window.showDetail = showDetail;
+  window.shareTransactionFromModal = shareTransactionFromModal;
+  window.downloadReceiptFromModal = downloadReceiptFromModal;
+  window.addToContacts = addToContacts;
+  window.hideAddContactSection = hideAddContactSection;
+
+  loadData();
+</script>
+{% endblock %}

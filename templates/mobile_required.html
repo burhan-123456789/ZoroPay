@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes"
+    />
+    <title>Zoro Pay | Seamless Digital Payments</title>
+    <!-- Google Fonts & Font Awesome 6 (Free CDN) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #0a0a0f;
+        color: #f0f0f0;
+        overflow-x: hidden;
+      }
+
+      /* animated gradient background with subtle movement */
+      .animated-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -2;
+        background: radial-gradient(circle at 20% 30%, #0c0b1a, #000000);
+      }
+
+      .animated-bg::before {
+        content: "";
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        top: -50%;
+        left: -50%;
+        background: radial-gradient(
+          circle,
+          rgba(79, 70, 229, 0.15) 0%,
+          rgba(0, 0, 0, 0) 70%
+        );
+        animation: slowShift 18s infinite alternate ease-in-out;
+        pointer-events: none;
+      }
+
+      @keyframes slowShift {
+        0% {
+          transform: translate(0%, 0%) scale(1);
+          opacity: 0.6;
+        }
+        100% {
+          transform: translate(5%, 3%) scale(1.2);
+          opacity: 1;
+        }
+      }
+
+      /* main container: split for desktop, column for mobile */
+      .desktop-container {
+        display: flex;
+        min-height: 100vh;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 3rem;
+        align-items: center;
+        justify-content: space-between;
+        gap: 3rem;
+        position: relative;
+        z-index: 2;
+      }
+
+      /* left content area */
+      .hero-content {
+        flex: 1.2;
+        animation: fadeSlideUp 0.8s ease-out;
+      }
+
+      .hero-content .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(79, 70, 229, 0.2);
+        backdrop-filter: blur(4px);
+        padding: 0.4rem 1rem;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        border: 1px solid rgba(79, 70, 229, 0.4);
+        margin-bottom: 1.8rem;
+        color: #a5b4fc;
+      }
+
+      .hero-content h1 {
+        font-size: 3.8rem;
+        font-weight: 800;
+        line-height: 1.2;
+        background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        margin-bottom: 1.2rem;
+      }
+
+      .hero-content .highlight {
+        color: #818cf8;
+        background: none;
+        background-clip: unset;
+        -webkit-background-clip: unset;
+      }
+
+      .hero-description {
+        font-size: 1.2rem;
+        line-height: 1.5;
+        color: #b9c3e6;
+        margin-bottom: 2rem;
+        max-width: 90%;
+      }
+
+      .feature-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        margin: 2rem 0 2.2rem;
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(8px);
+        padding: 0.5rem 1.2rem;
+        border-radius: 60px;
+        border: 1px solid rgba(129, 140, 248, 0.25);
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      .feature-item i {
+        font-size: 1.2rem;
+        color: #a5b4fc;
+      }
+
+      .cta-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 0.8rem;
+      }
+
+      .btn-primary {
+        background: #4f46e5;
+        color: white;
+        border: none;
+        padding: 0.9rem 2rem;
+        border-radius: 60px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+        text-decoration: none;
+      }
+
+      .btn-primary:hover {
+        background: #6366f1;
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4);
+      }
+
+      .btn-outline {
+        background: transparent;
+        border: 1.5px solid rgba(129, 140, 248, 0.6);
+        color: #e0e7ff;
+        padding: 0.9rem 1.8rem;
+        border-radius: 60px;
+        font-weight: 500;
+        transition: 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .btn-outline:hover {
+        border-color: #818cf8;
+        background: rgba(129, 140, 248, 0.1);
+        color: white;
+      }
+
+      /* QR CARD */
+      .qr-card {
+        flex: 0.8;
+        background: rgba(18, 18, 28, 0.75);
+        backdrop-filter: blur(12px);
+        border-radius: 2rem;
+        padding: 2rem 1.8rem;
+        text-align: center;
+        border: 1px solid rgba(129, 140, 248, 0.3);
+        box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.5);
+        animation: fadeSlideUp 0.8s 0.1s ease-out backwards;
+      }
+
+      .qr-card h3 {
+        font-weight: 600;
+        font-size: 1.6rem;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.3px;
+      }
+
+      .qr-sub {
+        color: #9ca3af;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+      }
+
+      .qr-wrapper {
+        background: white;
+        padding: 0.8rem;
+        border-radius: 24px;
+        display: inline-block;
+        margin: 0.5rem auto 1rem;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      canvas#liveQR {
+        display: block;
+        margin: 0 auto;
+        width: 200px;
+        height: 200px;
+        border-radius: 16px;
+      }
+
+      .qr-note {
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: #a0aec0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .download-links {
+        display: flex;
+        justify-content: center;
+        gap: 1.2rem;
+        margin-top: 1.5rem;
+      }
+
+      .store-badge {
+        background: #1f1f2e;
+        border-radius: 40px;
+        padding: 0.4rem 1rem;
+        font-size: 0.7rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        transition: 0.2s;
+        text-decoration: none;
+        color: #e2e8f0;
+        border: 1px solid #2d2d44;
+      }
+
+      .store-badge:hover {
+        background: #2d2d44;
+        border-color: #4f46e5;
+      }
+
+      /* Mobile detection: when screen width <= 900px, show optimized but still present */
+      @media (max-width: 900px) {
+        .desktop-container {
+          flex-direction: column;
+          padding: 2rem 1.5rem;
+          text-align: center;
+          gap: 2rem;
+        }
+        .hero-content h1 {
+          font-size: 2.5rem;
+        }
+        .hero-description {
+          max-width: 100%;
+          font-size: 1rem;
+        }
+        .feature-grid {
+          justify-content: center;
+        }
+        .cta-buttons {
+          justify-content: center;
+        }
+        .qr-card {
+          width: 100%;
+          max-width: 380px;
+          margin: 0 auto;
+        }
+      }
+
+      @keyframes fadeSlideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      footer {
+        text-align: center;
+        padding: 2rem 1rem 2rem;
+        font-size: 0.75rem;
+        color: #5f6c8c;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        margin-top: 1rem;
+      }
+
+      .floating-particles {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      @media (max-width: 480px) {
+        .btn-primary,
+        .btn-outline {
+          padding: 0.7rem 1.4rem;
+          font-size: 0.85rem;
+        }
+      }
+
+      /* download overlay styling */
+      #dynamicDownloadOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #0a0a0f;
+        z-index: 10000;
+        backdrop-filter: blur(12px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        padding: 2rem;
+        font-family: "Inter", sans-serif;
+      }
+      .download-card {
+        background: #12121c;
+        max-width: 400px;
+        border-radius: 2rem;
+        padding: 2rem;
+        text-align: center;
+        border: 1px solid #4f46e5;
+        box-shadow: 0 25px 40px rgba(0, 0, 0, 0.5);
+      }
+      .download-card i {
+        font-size: 3rem;
+        color: #818cf8;
+      }
+      .download-card h2 {
+        color: white;
+        margin: 1rem 0 0.5rem;
+      }
+      .download-card p {
+        color: #a5b4fc;
+        margin-bottom: 1.5rem;
+      }
+      .store-row {
+        background: #1e1e2a;
+        border-radius: 24px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .store-row p {
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+      }
+      .mock-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 0.5rem;
+      }
+      .mock-store-btn {
+        background: #2d2d44;
+        border: none;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 40px;
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: 0.2s;
+      }
+      .mock-store-btn:hover {
+        background: #4f46e5;
+      }
+      .close-overlay-btn {
+        background: transparent;
+        border: 1px solid #4f46e5;
+        color: #a5b4fc;
+        padding: 0.5rem 1.2rem;
+        border-radius: 40px;
+        cursor: pointer;
+        margin-top: 0.5rem;
+        font-family: inherit;
+        transition: 0.2s;
+      }
+      .close-overlay-btn:hover {
+        background: rgba(79, 70, 229, 0.2);
+        color: white;
+      }
+    </style>
+    <!-- QR Code Library: dynamic QR generation -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
+  </head>
+  <body>
+    <div class="animated-bg"></div>
+    <div class="floating-particles"></div>
+
+    <div class="desktop-container">
+      <div class="hero-content">
+        <div class="badge">
+          <i class="fas fa-bolt" style="font-size: 0.8rem"></i> NEXT-GEN
+          PAYMENTS • ZERO FUSS
+        </div>
+        <h1>
+          Pay the <span class="highlight">Zoro</span> Pay.<br />Fast, Safe,
+          Rewarding.
+        </h1>
+        <p class="hero-description">
+          Instant UPI transfers, cashback on every transaction, virtual cards,
+          and biometric security. Join millions who experience banking
+          reimagined.
+        </p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <i class="fas fa-bolt"></i> Instant Money Transfer
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-gift"></i> Up to 5% Cashback
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-fingerprint"></i> Biometric Login
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-credit-card"></i> Virtual Debit Card
+          </div>
+        </div>
+
+        <div class="cta-buttons">
+          <a href="#" class="btn-primary" id="downloadTriggerBtn">
+            <i class="fas fa-mobile-alt"></i> Download for Mobile
+          </a>
+          <a href="#" class="btn-outline" id="learnMoreBtn">
+            Learn More <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+        <p style="font-size: 0.75rem; margin-top: 1.8rem; opacity: 0.6">
+          <i class="fas fa-shield-alt"></i> Trusted by 200k+ users • Zero fraud
+          guarantee
+        </p>
+      </div>
+
+      <div class="qr-card">
+        <h3><i class="fas fa-qrcode"></i> Scan & Download</h3>
+        <div class="qr-sub">Get Zoro Pay on your phone</div>
+        <div class="qr-wrapper">
+          <div id="qrcode-container"></div>
+        </div>
+        <div class="qr-note">
+          <i class="fas fa-camera"></i>
+          <span>Open camera or scan with any QR reader</span>
+        </div>
+        <div class="download-links">
+          <a href="#" class="store-badge" id="mockPlayStore"
+            ><i class="fab fa-google-play"></i> Google Play</a
+          >
+          <a href="#" class="store-badge" id="mockAppStore"
+            ><i class="fab fa-apple"></i> App Store</a
+          >
+        </div>
+        <p style="margin-top: 1rem; font-size: 0.7rem">
+          <i class="fas fa-qrcode"></i> Scan to download the official Zoro Pay
+          app
+        </p>
+      </div>
+    </div>
+    <footer>
+      <i class="far fa-copyright"></i> 2026 Zoro Pay — India's most rewarding
+      payment platform. Simulated environment for demo.
+    </footer>
+
+    <script>
+      (function () {
+        // --------------------------------------------------------------
+        // 1. Generate REAL QR Code that points to a downloadable app link (hash-based download overlay)
+        //    When scanned on mobile, opens same page with #zoro-download and shows install options.
+        // --------------------------------------------------------------
+
+        function setupQRWithDownloadHash() {
+          const downloadDeepLink =
+            window.location.origin +
+            window.location.pathname +
+            "#zoro-download";
+          const qrContainer = document.getElementById("qrcode-container");
+          if (qrContainer) {
+            qrContainer.innerHTML = "";
+            if (typeof QRCode !== "undefined") {
+              new QRCode(qrContainer, {
+                text: downloadDeepLink,
+                width: 200,
+                height: 200,
+                colorDark: "#1e1b4b",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H,
+              });
+            } else {
+              // fallback canvas
+              const canvas = document.createElement("canvas");
+              canvas.width = 200;
+              canvas.height = 200;
+              const ctx = canvas.getContext("2d");
+              ctx.fillStyle = "#ffffff";
+              ctx.fillRect(0, 0, 200, 200);
+              ctx.fillStyle = "#4f46e5";
+              ctx.font = "bold 14px 'Inter'";
+              ctx.fillText("Zoro Pay", 60, 100);
+              qrContainer.appendChild(canvas);
+            }
+          }
+        }
+
+        // Show full download overlay (no emojis, Font Awesome icons)
+        function showMobileDownloadInterface() {
+          if (window.location.hash === "#zoro-download") {
+            if (document.getElementById("dynamicDownloadOverlay")) return;
+            const overlay = document.createElement("div");
+            overlay.id = "dynamicDownloadOverlay";
+            overlay.innerHTML = `
+          <div class="download-card">
+            <i class="fas fa-rocket"></i>
+            <h2>Zoro Pay Mobile App</h2>
+            <p>Secure • Lightning fast • Cashback king</p>
+            <div class="store-row">
+              <p><i class="fas fa-download"></i> Download now from official stores</p>
+              <div class="mock-buttons">
+                <button class="mock-store-btn" id="mockPlayDownloadBtn"><i class="fab fa-google-play"></i> Google Play</button>
+                <button class="mock-store-btn" id="mockAppDownloadBtn"><i class="fab fa-apple"></i> App Store</button>
+              </div>
+              <p style="font-size: 0.7rem; margin-top: 1rem; color:#7e8aa2;"><i class="fas fa-code-branch"></i> Direct APK / iOS coming soon — demo version</p>
+            </div>
+            <button class="close-overlay-btn" id="closeDownloadOverlay"><i class="fas fa-times"></i> Close & Continue</button>
+          </div>
+        `;
+            document.body.appendChild(overlay);
+            document.body.style.overflow = "hidden";
+
+            const closeBtn = document.getElementById("closeDownloadOverlay");
+            if (closeBtn) {
+              closeBtn.addEventListener("click", () => {
+                overlay.remove();
+                document.body.style.overflow = "";
+                window.location.hash = "";
+              });
+            }
+            const mockPlay = document.getElementById("mockPlayDownloadBtn");
+            const mockApp = document.getElementById("mockAppDownloadBtn");
+            if (mockPlay) {
+              mockPlay.addEventListener("click", (e) => {
+                e.preventDefault();
+                alert(
+                  "📱 You would be redirected to Google Play Store to download Zoro Pay official app. (Demo simulation)",
+                );
+              });
+            }
+            if (mockApp) {
+              mockApp.addEventListener("click", (e) => {
+                e.preventDefault();
+                alert(
+                  "🍎 App Store download would start. Experience seamless payments on iOS.",
+                );
+              });
+            }
+            // clean hash without reloading page
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname,
+            );
+          }
+        }
+
+        function bindDownloadButtons() {
+          const downloadBtn = document.getElementById("downloadTriggerBtn");
+          if (downloadBtn) {
+            downloadBtn.addEventListener("click", (e) => {
+              e.preventDefault();
+              window.location.hash = "zoro-download";
+              showMobileDownloadInterface();
+            });
+          }
+          const mockPlayStore = document.getElementById("mockPlayStore");
+          const mockAppStore = document.getElementById("mockAppStore");
+          if (mockPlayStore) {
+            mockPlayStore.addEventListener("click", (e) => {
+              e.preventDefault();
+              alert(
+                "📱 Official Google Play Store version coming soon. Stay tuned! Meanwhile, scan QR for demo.",
+              );
+            });
+          }
+          if (mockAppStore) {
+            mockAppStore.addEventListener("click", (e) => {
+              e.preventDefault();
+              alert(
+                "🍎 App Store version under development. Scan QR to access app download page preview.",
+              );
+            });
+          }
+          const learnMore = document.getElementById("learnMoreBtn");
+          if (learnMore) {
+            learnMore.addEventListener("click", (e) => {
+              e.preventDefault();
+              alert(
+                "✨ Zoro Pay: Instant transfers, referral bonuses up to ₹250, cashback vault, virtual cards & biometric security. Experience the future of payments.",
+              );
+            });
+          }
+        }
+
+        // particle effect with cleaner style
+        function initParticles() {
+          const particleContainer = document.querySelector(
+            ".floating-particles",
+          );
+          if (!particleContainer) return;
+          for (let i = 0; i < 35; i++) {
+            const particle = document.createElement("div");
+            particle.style.position = "absolute";
+            const size = Math.random() * 4 + 2;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.backgroundColor = `rgba(129, 140, 248, ${Math.random() * 0.3 + 0.1})`;
+            particle.style.borderRadius = "50%";
+            particle.style.top = `${Math.random() * 100}%`;
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.pointerEvents = "none";
+            particle.style.opacity = "0.5";
+            particle.style.animation = `floatParticle ${Math.random() * 12 + 8}s infinite linear`;
+            particleContainer.appendChild(particle);
+          }
+          const styleAnim = document.createElement("style");
+          styleAnim.textContent = `
+        @keyframes floatParticle {
+          0% { transform: translateY(0px) translateX(0px); opacity: 0; }
+          20% { opacity: 0.6; }
+          80% { opacity: 0.3; }
+          100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
+        }
+      `;
+          document.head.appendChild(styleAnim);
+        }
+
+        function detectAndWelcome() {
+          const isMobile =
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+              navigator.userAgent,
+            );
+          if (!isMobile) {
+            const toast = document.createElement("div");
+            toast.style.position = "fixed";
+            toast.style.bottom = "20px";
+            toast.style.left = "50%";
+            toast.style.transform = "translateX(-50%)";
+            toast.style.backgroundColor = "#1f1f2e";
+            toast.style.color = "#cbd5e6";
+            toast.style.padding = "8px 18px";
+            toast.style.borderRadius = "40px";
+            toast.style.fontSize = "0.8rem";
+            toast.style.zIndex = "99";
+            toast.style.backdropFilter = "blur(8px)";
+            toast.style.border = "1px solid #4f46e5";
+            toast.style.fontWeight = "500";
+            toast.style.display = "flex";
+            toast.style.alignItems = "center";
+            toast.style.gap = "8px";
+            toast.innerHTML =
+              '<i class="fas fa-qrcode"></i> Scan QR with mobile to download Zoro Pay app';
+            document.body.appendChild(toast);
+            setTimeout(() => {
+              toast.style.opacity = "0";
+              setTimeout(() => toast.remove(), 1000);
+            }, 4500);
+          }
+        }
+
+        // Fallback QR in case library not loaded
+        window.addEventListener("DOMContentLoaded", () => {
+          setupQRWithDownloadHash();
+          bindDownloadButtons();
+          initParticles();
+          detectAndWelcome();
+          if (window.location.hash === "#zoro-download") {
+            showMobileDownloadInterface();
+          }
+        });
+
+        window.addEventListener("hashchange", () => {
+          if (window.location.hash === "#zoro-download") {
+            showMobileDownloadInterface();
+          }
+        });
+
+        // Additional fallback for QR if library missing (edge case)
+        if (typeof QRCode === "undefined") {
+          window.addEventListener("load", () => {
+            const container = document.getElementById("qrcode-container");
+            if (container && !container.hasChildNodes()) {
+              const canvasElem = document.createElement("canvas");
+              canvasElem.width = 200;
+              canvasElem.height = 200;
+              const ctx = canvasElem.getContext("2d");
+              ctx.fillStyle = "#fff";
+              ctx.fillRect(0, 0, 200, 200);
+              ctx.fillStyle = "#4f46e5";
+              ctx.font = "bold 14px 'Inter'";
+              ctx.fillText("Zoro Pay", 60, 100);
+              container.appendChild(canvasElem);
+            }
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

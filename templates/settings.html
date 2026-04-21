@@ -1,0 +1,1005 @@
+{% extends "base.html" %} {% block title %}Settings - Zoro Pay{% endblock %} {%
+block extra_styles %}
+<style>
+  .settings-card {
+    background: rgba(18, 18, 28, 0.7);
+    backdrop-filter: blur(16px);
+    border-radius: 2rem;
+    padding: 1.5rem;
+    border: 1px solid #4f46e5;
+  }
+  .setting-item {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #26263a;
+  }
+  .setting-item label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .input-field {
+    width: 100%;
+    padding: 12px 16px;
+    background: #0f0f17;
+    border: 1px solid #2d2d44;
+    border-radius: 1rem;
+    color: white;
+    margin-bottom: 10px;
+  }
+  .btn-small {
+    background: #4f46e5;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 2rem;
+    color: white;
+    cursor: pointer;
+    margin-right: 8px;
+  }
+  .btn-danger {
+    background: #dc2626;
+    width: 100%;
+    padding: 14px;
+    border-radius: 2rem;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .upi-display {
+    background: #0f0f17;
+    padding: 12px;
+    border-radius: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Enhanced API Key Styles */
+  .api-key-wrapper {
+    background: #0f0f17;
+    border-radius: 1rem;
+    border: 1px solid #2d2d44;
+    transition: all 0.2s;
+  }
+  .api-key-wrapper:focus-within {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+  }
+  .api-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 4px 4px 16px;
+  }
+  .api-display input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #a78bfa;
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    padding: 12px 0;
+    outline: none;
+  }
+  .api-display input::placeholder {
+    color: #4a4a6a;
+  }
+  .copy-api-btn {
+    background: rgba(79, 70, 229, 0.2);
+    border: 1px solid #4f46e5;
+    border-radius: 2rem;
+    padding: 6px 14px;
+    color: #c084fc;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .copy-api-btn:hover {
+    background: #4f46e5;
+    color: white;
+    border-color: #a78bfa;
+  }
+  .generate-api-btn {
+    background: #4f46e5;
+    border: none;
+    border-radius: 2rem;
+    padding: 6px 14px;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
+  }
+  .generate-api-btn:hover {
+    background: #6366f1;
+  }
+  .api-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* Card Button - triggers popup */
+  .card-trigger-btn {
+    background: linear-gradient(
+      135deg,
+      rgba(79, 70, 229, 0.2),
+      rgba(139, 92, 246, 0.1)
+    );
+    border: 1px solid #4f46e5;
+    border-radius: 2rem;
+    padding: 14px 24px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 24px;
+    font-weight: 600;
+    color: #e0e7ff;
+  }
+  .card-trigger-btn:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);
+  }
+  .card-trigger-btn i {
+    font-size: 1.2rem;
+  }
+
+  /* Modal Overlay */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+  .modal-overlay.active {
+    visibility: visible;
+    opacity: 1;
+  }
+  .modal-content {
+    max-width: 420px;
+    width: 90%;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+  .modal-overlay.active .modal-content {
+    transform: scale(1);
+  }
+  .virtual-card-modal {
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+    border-radius: 1.5rem;
+    padding: 1.8rem;
+    border: 1px solid rgba(79, 70, 229, 0.5);
+    position: relative;
+    box-shadow: 0 25px 40px rgba(0, 0, 0, 0.5);
+  }
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close:hover {
+    background: #dc2626;
+  }
+  .card-chip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  .chip {
+    background: linear-gradient(135deg, #ffd700, #ffb347);
+    width: 45px;
+    height: 35px;
+    border-radius: 8px;
+    position: relative;
+  }
+  .card-number {
+    font-family: monospace;
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .card-details {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .hidden-card {
+    filter: blur(5px);
+  }
+  .eye-icon-modal {
+    background: rgba(79, 70, 229, 0.2);
+    border: 1px solid #4f46e5;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-top: 16px;
+  }
+  .biometric-card {
+    background: linear-gradient(135deg, #1e1e2c, #0f0f17);
+    border-radius: 1rem;
+    padding: 16px;
+    border: 1px solid #4f46e5;
+  }
+  .biometric-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .biometric-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+  }
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #2d2d44;
+    transition: 0.3s;
+    border-radius: 34px;
+  }
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+  }
+  input:checked + .toggle-slider {
+    background-color: #4f46e5;
+  }
+  input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+  }
+  .pwa-install-card {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-radius: 1.25rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pwa-install-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .pwa-install-icon {
+    background: #4f46e5;
+    width: 48px;
+    height: 48px;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+  }
+  .pwa-install-btn {
+    background: #4f46e5;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 2rem;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .pwa-installed-badge {
+    background: rgba(16, 185, 129, 0.2);
+    padding: 6px 12px;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    color: #10b981;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .register-biometric-btn {
+    background: #4f46e5;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 2rem;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+    font-size: 14px;
+  }
+  .biometric-device-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #26263a;
+  }
+  .biometric-device-item:last-child {
+    border-bottom: none;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <div class="page-header">
+    <button class="icon-btn" onclick="history.back()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1>Settings</h1>
+    <div style="width: 44px"></div>
+  </div>
+  <div class="settings-card">
+    <div id="pwaInstallContainer"></div>
+
+    <!-- Button to trigger card popup instead of always displaying -->
+    <button class="card-trigger-btn" onclick="openCardModal()">
+      <i class="fas fa-credit-card"></i>
+      View Virtual Debit Card
+      <i class="fas fa-eye"></i>
+    </button>
+
+    <div class="setting-item">
+      <label>Your Name</label>
+      <input type="text" id="userNameInput" class="input-field" />
+      <button class="btn-small" onclick="updateName()">Update</button>
+    </div>
+
+    <div class="setting-item">
+      <label>Biometric Login</label>
+      <div class="biometric-card">
+        <div class="biometric-header">
+          <div class="biometric-title">
+            <i class="fas fa-fingerprint"></i>
+            <span>Fingerprint / Face Unlock</span>
+          </div>
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              id="biometricToggle"
+              onchange="toggleBiometric()"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="biometric-device" id="biometricStatus">
+          <i class="fas fa-info-circle"></i>
+          <span id="biometricStatusText">Not set up</span>
+        </div>
+        <div id="biometricDevices" style="margin-top: 10px"></div>
+        <div id="registerBiometricSection" style="display: none">
+          <button
+            class="register-biometric-btn"
+            id="registerBiometricBtn"
+            onclick="registerBiometric()"
+          >
+            <i class="fas fa-fingerprint"></i> Register Fingerprint/Face
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="setting-item">
+      <label>UPI ID</label>
+      <div class="upi-display">
+        <span id="upiId">-</span>
+        <button class="btn-small" onclick="copyUPI()">Copy</button>
+      </div>
+    </div>
+
+    <div class="setting-item">
+      <label>API Key</label>
+      <div class="api-key-wrapper">
+        <div class="api-display">
+          <input type="text" id="apiKey" readonly value="Not generated" />
+          <div class="api-actions">
+            <button class="copy-api-btn" onclick="copyApiKey()">
+              <i class="fas fa-copy"></i> Copy
+            </button>
+            <button class="generate-api-btn" onclick="generateApiKey()">
+              <i class="fas fa-sync-alt"></i> Generate
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="setting-item">
+      <label>API Usage</label>
+      <div
+        style="display: flex; justify-content: space-between; margin-top: 8px"
+      >
+        <span>Total calls: <strong id="apiUsageCount">0</strong></span>
+        <span>Last used: <span id="lastApiUsed">Never</span></span>
+      </div>
+    </div>
+
+    <div class="setting-item">
+      <label>Change PIN</label>
+      <input
+        type="password"
+        id="oldPin"
+        placeholder="Current PIN"
+        class="input-field"
+      />
+      <input
+        type="password"
+        id="newPin"
+        placeholder="New PIN (4-6 digits)"
+        class="input-field"
+      />
+      <button class="btn-small" onclick="changePin()">Change PIN</button>
+    </div>
+
+    <div class="setting-item">
+      <label>Cashback Earned</label>
+      <div
+        style="font-size: 2rem; font-weight: bold; color: #10b981"
+        id="cashbackTotal"
+      >
+        ₹0
+      </div>
+    </div>
+
+    <button class="btn-danger" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<!-- Modal Popup for Virtual Card -->
+<div id="cardModal" class="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="virtual-card-modal">
+      <button class="modal-close" onclick="closeCardModal()">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="card-chip">
+        <div class="chip"></div>
+        <div class="card-network">ZORO</div>
+      </div>
+      <div class="card-number" id="modalCardNumber">•••• •••• •••• ••••</div>
+      <div class="card-details">
+        <div>
+          <label>VALID THRU</label><br /><span id="modalExpiry">••/••</span>
+        </div>
+        <div><label>CVV</label><br /><span id="modalCvv">•••</span></div>
+      </div>
+      <div>
+        <label>CARD HOLDER</label><br /><span id="modalCardHolder"
+          >••••••••</span
+        >
+      </div>
+      <div
+        class="eye-icon-modal"
+        id="toggleModalView"
+        onclick="toggleModalCardDetails()"
+      >
+        <i class="fas fa-eye-slash"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block extra_scripts %}
+<script>
+  let deferredPrompt = null;
+  let isAppInstalled = false;
+  let virtualCardData = null;
+  let cardDetailsVisible = false;
+  let webAuthnSupported = false;
+  let currentChallenge = null;
+
+  function checkIfInstalled() {
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
+    if (isStandalone) {
+      isAppInstalled = true;
+      localStorage.setItem("pwa_installed", "true");
+    }
+    return isStandalone;
+  }
+
+  function renderPwaInstallButton() {
+    const container = document.getElementById("pwaInstallContainer");
+    if (!container) return;
+
+    if (isAppInstalled) {
+      container.innerHTML = `<div class="pwa-install-card"><div class="pwa-install-info"><div class="pwa-install-icon"><i class="fas fa-check-circle"></i></div><div><h4>Zoro Pay App</h4><p>App is installed on your device</p></div></div><div class="pwa-installed-badge"><i class="fas fa-mobile-alt"></i><span>Installed</span></div></div>`;
+      return;
+    }
+
+    if (deferredPrompt) {
+      container.innerHTML = `<div class="pwa-install-card"><div class="pwa-install-info"><div class="pwa-install-icon"><i class="fas fa-download"></i></div><div><h4>Install Zoro Pay App</h4><p>Get faster access & offline support</p></div></div><button class="pwa-install-btn" id="triggerPwaInstall">Install</button></div>`;
+      document
+        .getElementById("triggerPwaInstall")
+        ?.addEventListener("click", triggerInstall);
+      return;
+    }
+
+    container.innerHTML = `<div class="pwa-install-card"><div class="pwa-install-info"><div class="pwa-install-icon"><i class="fas fa-mobile-alt"></i></div><div><h4>Install App</h4><p>Add to home screen for easy access</p></div></div></div>`;
+  }
+
+  async function triggerInstall() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      isAppInstalled = true;
+      deferredPrompt = null;
+      renderPwaInstallButton();
+    }
+  }
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    renderPwaInstallButton();
+  });
+
+  // Virtual Card Functions
+  async function loadVirtualCard() {
+    try {
+      const response = await fetch("/api/virtual_card");
+      virtualCardData = await response.json();
+    } catch (error) {
+      console.error("Load virtual card error:", error);
+    }
+  }
+
+  function updateModalCardDisplay() {
+    if (!virtualCardData) return;
+    if (cardDetailsVisible) {
+      document.getElementById("modalCardNumber").innerHTML =
+        virtualCardData.card_number.match(/.{1,4}/g).join(" ");
+      document.getElementById("modalExpiry").innerHTML =
+        virtualCardData.expiry_date;
+      document.getElementById("modalCvv").innerHTML = virtualCardData.cvv;
+      document.getElementById("modalCardHolder").innerHTML =
+        virtualCardData.card_holder_name;
+      document.getElementById("toggleModalView").innerHTML =
+        '<i class="fas fa-eye"></i>';
+    } else {
+      document.getElementById("modalCardNumber").innerHTML =
+        "•••• •••• •••• ••••";
+      document.getElementById("modalExpiry").innerHTML = "••/••";
+      document.getElementById("modalCvv").innerHTML = "•••";
+      document.getElementById("modalCardHolder").innerHTML = "••••••••";
+      document.getElementById("toggleModalView").innerHTML =
+        '<i class="fas fa-eye-slash"></i>';
+    }
+  }
+
+  function toggleModalCardDetails() {
+    cardDetailsVisible = !cardDetailsVisible;
+    updateModalCardDisplay();
+  }
+
+  function openCardModal() {
+    const modal = document.getElementById("cardModal");
+    modal.classList.add("active");
+    if (virtualCardData) {
+      updateModalCardDisplay();
+    }
+  }
+
+  function closeCardModal() {
+    const modal = document.getElementById("cardModal");
+    modal.classList.remove("active");
+    cardDetailsVisible = false;
+    updateModalCardDisplay();
+  }
+
+  function closeModalOnOverlay(event) {
+    if (event.target === document.getElementById("cardModal")) {
+      closeCardModal();
+    }
+  }
+
+  async function loadSettings() {
+    try {
+      const user = await fetch("/api/user").then((r) => r.json());
+      document.getElementById("userNameInput").value = user.name;
+      document.getElementById("upiId").innerText = user.upi_id;
+      document.getElementById("apiKey").value = user.api_key || "Not generated";
+      document.getElementById("apiUsageCount").innerText =
+        user.api_usage_count || 0;
+      document.getElementById("cashbackTotal").innerHTML =
+        window.formatCurrency(user.cashback_earned || 0);
+      if (user.last_api_used) {
+        document.getElementById("lastApiUsed").innerText = new Date(
+          user.last_api_used,
+        ).toLocaleString();
+      }
+      await loadBiometricStatus();
+      await loadVirtualCard();
+    } catch (error) {
+      console.error("Load settings error:", error);
+    }
+  }
+
+  async function loadBiometricStatus() {
+    try {
+      const data = await fetch("/api/biometric/status").then((r) => r.json());
+      document.getElementById("biometricToggle").checked = data.enabled;
+      const statusText = document.getElementById("biometricStatusText");
+      const devicesDiv = document.getElementById("biometricDevices");
+      const registerSection = document.getElementById(
+        "registerBiometricSection",
+      );
+
+      if (data.enabled && data.credentials?.length > 0) {
+        statusText.innerHTML = `<i class="fas fa-check-circle" style="color:#10b981;"></i> Enabled (${data.credentials.length} device${data.credentials.length > 1 ? "s" : ""})`;
+        devicesDiv.innerHTML = data.credentials
+          .map(
+            (cred) => `
+              <div class="biometric-device-item">
+                <div>
+                  <i class="fas fa-mobile-alt"></i> ${window.escapeHtml(cred.device_name)}
+                  <div style="font-size:0.7rem; color:#6b7280;">Added: ${new Date(cred.created_at).toLocaleDateString()}</div>
+                </div>
+                <button class="btn-small" style="background:#dc2626;" onclick="removeBiometricDevice('${cred.credential_id}')">Remove</button>
+              </div>
+            `,
+          )
+          .join("");
+        registerSection.style.display = "none";
+      } else {
+        statusText.innerHTML =
+          '<i class="fas fa-exclamation-triangle" style="color:#fbbf24;"></i> Not set up';
+        devicesDiv.innerHTML =
+          '<div style="text-align:center; padding:10px; color:#6b7280;">No biometric devices registered</div>';
+
+        if (webAuthnSupported) {
+          registerSection.style.display = "block";
+        } else {
+          registerSection.style.display = "none";
+          statusText.innerHTML =
+            '<i class="fas fa-times-circle" style="color:#dc2626;"></i> WebAuthn not supported on this device/browser';
+        }
+      }
+    } catch (error) {
+      console.error("Load biometric status error:", error);
+    }
+  }
+
+  function checkWebAuthnSupport() {
+    if (window.PublicKeyCredential) {
+      webAuthnSupported = true;
+      return true;
+    } else {
+      webAuthnSupported = false;
+      console.log("WebAuthn not supported on this browser");
+      return false;
+    }
+  }
+
+  function base64ToArrayBuffer(base64) {
+    const binaryString = window.atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+  }
+
+  async function registerBiometric() {
+    if (!webAuthnSupported) {
+      window.showNotification(
+        "Biometric authentication is not supported on your device/browser",
+        "error",
+      );
+      return;
+    }
+
+    try {
+      window.showNotification("Preparing biometric registration...", "info");
+
+      const userResponse = await fetch("/api/user");
+      const user = await userResponse.json();
+
+      const configResponse = await fetch("/api/webauthn/config");
+      const config = await configResponse.json();
+
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      currentChallenge = arrayBufferToBase64(challenge);
+
+      const publicKeyCredentialCreationOptions = {
+        challenge: challenge,
+        rp: {
+          name: config.rpName,
+          id: config.rpId,
+        },
+        user: {
+          id: new TextEncoder().encode(user.id.toString()),
+          name: user.phone,
+          displayName: user.name,
+        },
+        pubKeyCredParams: [
+          { type: "public-key", alg: -7 },
+          { type: "public-key", alg: -257 },
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: "platform",
+          userVerification: "required",
+          residentKey: "preferred",
+        },
+        timeout: 60000,
+        attestation: "none",
+      };
+
+      const credential = await navigator.credentials.create({
+        publicKey: publicKeyCredentialCreationOptions,
+      });
+
+      const credentialData = {
+        credential_id: arrayBufferToBase64(credential.rawId),
+        public_key: arrayBufferToBase64(credential.response.getPublicKey()),
+        device_name: getDeviceName(),
+      };
+
+      const registerResponse = await fetch("/api/biometric/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentialData),
+      });
+
+      if (registerResponse.ok) {
+        window.showNotification(
+          "Biometric registered successfully! You can now login with fingerprint/face.",
+          "success",
+        );
+        await loadBiometricStatus();
+      } else {
+        const error = await registerResponse.json();
+        throw new Error(error.error || "Registration failed");
+      }
+    } catch (error) {
+      console.error("Biometric registration error:", error);
+      if (error.name === "NotAllowedError") {
+        window.showNotification(
+          "Biometric registration cancelled or not allowed",
+          "error",
+        );
+      } else if (error.name === "NotSupportedError") {
+        window.showNotification(
+          "Your device doesn't support biometric authentication",
+          "error",
+        );
+      } else {
+        window.showNotification(
+          "Failed to register biometric: " + error.message,
+          "error",
+        );
+      }
+    }
+  }
+
+  function getDeviceName() {
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes("iPhone") || userAgent.includes("iPad")) {
+      return "Apple " + (userAgent.includes("iPhone") ? "iPhone" : "iPad");
+    } else if (userAgent.includes("Android")) {
+      return "Android Device";
+    } else if (userAgent.includes("Windows")) {
+      return "Windows Device";
+    } else if (userAgent.includes("Mac")) {
+      return "Mac Device";
+    }
+    return "WebAuthn Device";
+  }
+
+  async function toggleBiometric() {
+    const toggle = document.getElementById("biometricToggle");
+
+    if (toggle.checked) {
+      if (!checkWebAuthnSupport()) {
+        window.showNotification(
+          "Biometric authentication is not supported on your device/browser",
+          "error",
+        );
+        toggle.checked = false;
+        return;
+      }
+
+      const statusResponse = await fetch("/api/biometric/status");
+      const status = await statusResponse.json();
+
+      if (status.credentials && status.credentials.length > 0) {
+        window.showNotification("Biometric login enabled", "success");
+        await loadBiometricStatus();
+      } else {
+        window.showNotification(
+          "Please register your fingerprint/face first",
+          "info",
+        );
+        await registerBiometric();
+
+        const newStatus = await fetch("/api/biometric/status");
+        const newStatusData = await newStatus.json();
+        if (
+          !newStatusData.credentials ||
+          newStatusData.credentials.length === 0
+        ) {
+          toggle.checked = false;
+        }
+      }
+    } else {
+      if (
+        confirm(
+          "Disable biometric login? This will remove all registered devices.",
+        )
+      ) {
+        await fetch("/api/biometric/disable", { method: "POST" });
+        window.showNotification("Biometric login disabled", "success");
+        await loadBiometricStatus();
+      } else {
+        toggle.checked = true;
+      }
+    }
+  }
+
+  async function removeBiometricDevice(credentialId) {
+    if (confirm("Remove this biometric device?")) {
+      await fetch("/api/biometric/remove", {
+        method: "POST",
+        body: JSON.stringify({ credential_id: credentialId }),
+        headers: { "Content-Type": "application/json" },
+      });
+      window.showNotification("Biometric device removed", "success");
+      await loadBiometricStatus();
+
+      const status = await fetch("/api/biometric/status");
+      const statusData = await status.json();
+      if (!statusData.credentials || statusData.credentials.length === 0) {
+        document.getElementById("biometricToggle").checked = false;
+      }
+    }
+  }
+
+  async function updateName() {
+    const name = document.getElementById("userNameInput").value;
+    if (!name) {
+      window.showNotification("Please enter a name", "error");
+      return;
+    }
+    await fetch("/api/update_name", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+      headers: { "Content-Type": "application/json" },
+    });
+    window.showNotification("Name updated successfully!", "success");
+
+    // Reload virtual card data to get updated cardholder name
+    await loadVirtualCard();
+
+    // If modal is open, update the display
+    if (cardDetailsVisible) {
+      updateModalCardDisplay();
+    }
+  }
+
+  function copyUPI() {
+    const upi = document.getElementById("upiId").innerText;
+    navigator.clipboard.writeText(upi);
+    window.showNotification("UPI ID copied to clipboard!", "success");
+  }
+
+  function copyApiKey() {
+    const apiKeyInput = document.getElementById("apiKey");
+    if (apiKeyInput.value && apiKeyInput.value !== "Not generated") {
+      navigator.clipboard.writeText(apiKeyInput.value);
+      window.showNotification("API key copied to clipboard!", "success");
+    } else {
+      window.showNotification(
+        "No API key to copy. Generate one first.",
+        "error",
+      );
+    }
+  }
+
+  async function generateApiKey() {
+    const data = await fetch("/api/generate_api_key", { method: "POST" }).then(
+      (r) => r.json(),
+    );
+    document.getElementById("apiKey").value = data.api_key;
+    window.showNotification("New API key generated!", "success");
+  }
+
+  async function changePin() {
+    const oldPin = document.getElementById("oldPin").value;
+    const newPin = document.getElementById("newPin").value;
+    if (!oldPin || !newPin) {
+      window.showNotification("Please fill all fields", "error");
+      return;
+    }
+    if ((newPin.length !== 4 && newPin.length !== 6) || !/^\d+$/.test(newPin)) {
+      window.showNotification("PIN must be 4 or 6 digits", "error");
+      return;
+    }
+    await fetch("/api/change_pin", {
+      method: "POST",
+      body: JSON.stringify({ old_pin: oldPin, new_pin: newPin }),
+      headers: { "Content-Type": "application/json" },
+    });
+    window.showNotification("PIN changed successfully!", "success");
+    document.getElementById("oldPin").value = "";
+    document.getElementById("newPin").value = "";
+  }
+
+  async function logout() {
+    await fetch("/logout", { method: "POST" });
+    window.location.href = "/";
+  }
+
+  // Initialize
+  checkWebAuthnSupport();
+  checkIfInstalled();
+  loadSettings();
+  renderPwaInstallButton();
+</script>
+{% endblock %}

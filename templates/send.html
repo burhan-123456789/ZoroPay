@@ -1,0 +1,1305 @@
+{% extends "base.html" %} {% block title %}Send Money - Zoro Pay{% endblock %}
+{% block extra_styles %}
+<style>
+  .action-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    background: #0f0f17;
+    padding: 6px;
+    border-radius: 60px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 50px;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .tab-btn.active {
+    background: linear-gradient(95deg, #4f46e5, #6366f1);
+    color: white;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  }
+  .tab-content {
+    display: none;
+    animation: fadeIn 0.25s ease;
+  }
+  .tab-content.active {
+    display: block;
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    color: #cbd5e1;
+  }
+  .input-field {
+    width: 100%;
+    padding: 14px 18px;
+    background: #0a0a10;
+    border: 1.5px solid #26263a;
+    border-radius: 1.2rem;
+    color: white;
+    font-size: 1rem;
+    transition: 0.2s;
+  }
+  .input-field:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  }
+  .recipient-check {
+    margin-top: 8px;
+    font-size: 0.75rem;
+  }
+  .recipient-check.success {
+    color: #10b981;
+  }
+  .recipient-check.warning {
+    color: #f59e0b;
+  }
+  .recipient-check.info {
+    color: #60a5fa;
+  }
+  .recipient-check.error {
+    color: #ef4444;
+  }
+  .transaction-info {
+    background: #0f0f17;
+    border-radius: 1.2rem;
+    padding: 16px;
+    margin: 16px 0;
+    border-left: 3px solid #4f46e5;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .incoming-section {
+    margin-bottom: 24px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid rgba(79, 70, 229, 0.3);
+  }
+  .incoming-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background: rgba(79, 70, 229, 0.15);
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 600;
+  }
+  .incoming-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .badge-count {
+    background: #4f46e5;
+    padding: 2px 10px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    font-weight: bold;
+  }
+  .incoming-list {
+    max-height: 0;
+    overflow-y: auto;
+    transition: max-height 0.35s ease-out;
+    background: #0a0a10;
+  }
+  .incoming-list.open {
+    max-height: 380px;
+    padding: 12px;
+  }
+  .request-card {
+    background: #0f0f17;
+    border-radius: 1.2rem;
+    padding: 14px;
+    margin-bottom: 12px;
+    border-left: 3px solid #f59e0b;
+  }
+  .request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .requestor-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .request-amount {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #fbbf24;
+  }
+  .request-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .action-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 2rem;
+    border: none;
+    font-weight: 600;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .approve-btn {
+    background: #10b981;
+    color: white;
+  }
+  .reject-btn {
+    background: #ef4444;
+    color: white;
+  }
+  .contacts-list {
+    max-height: 450px;
+    overflow-y: auto;
+  }
+  .contact-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px;
+    background: #0f0f17;
+    border-radius: 1.2rem;
+    margin-bottom: 10px;
+  }
+  .contact-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+  .contact-info {
+    flex: 1;
+    margin-left: 12px;
+  }
+  .contact-name {
+    font-weight: 600;
+  }
+  .contact-phone {
+    font-size: 0.7rem;
+    color: #9ca3af;
+  }
+  .send-to-contact {
+    background: #4f46e5;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 40px;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-content {
+    background: #111118;
+    border-radius: 2rem;
+    max-width: 400px;
+    width: 90%;
+    border: 1px solid #4f46e5;
+  }
+  .modal-header {
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #26263a;
+  }
+  .close {
+    font-size: 1.8rem;
+    cursor: pointer;
+  }
+  .identifier-type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    margin-left: 8px;
+    background: rgba(79, 70, 229, 0.2);
+  }
+  
+  /* Custom Alert Modal Styles */
+  .custom-alert {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(12px);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  .custom-alert-content {
+    background: linear-gradient(135deg, #1a1a2e, #0f0f17);
+    border-radius: 2rem;
+    max-width: 340px;
+    width: 85%;
+    text-align: center;
+    padding: 28px 24px;
+    border: 1px solid #ef4444;
+    animation: slideUp 0.3s ease;
+  }
+  .custom-alert-icon {
+    font-size: 4rem;
+    color: #ef4444;
+    margin-bottom: 16px;
+  }
+  .custom-alert-title {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #fff;
+  }
+  .custom-alert-message {
+    color: #9ca3af;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .custom-alert-btn {
+    background: linear-gradient(95deg, #4f46e5, #6366f1);
+    border: none;
+    padding: 12px 28px;
+    border-radius: 2rem;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .custom-alert-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  }
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <div class="page-header">
+    <button class="icon-btn" onclick="history.back()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1
+      style="
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, #fff, #a78bfa);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      "
+    >
+      <i class="fas fa-paper-plane"></i> Send & Request
+    </h1>
+    <button class="icon-btn" onclick="startQRScanner()">
+      <i class="fas fa-qrcode"></i>
+    </button>
+  </div>
+
+  <div class="action-tabs">
+    <button class="tab-btn active" onclick="showTab('send')">
+      <i class="fas fa-paper-plane"></i> Send
+    </button>
+    <button class="tab-btn" onclick="showTab('request')">
+      <i class="fas fa-hand-holding-usd"></i> Request
+    </button>
+    <button
+      class="tab-btn"
+      onclick="
+        showTab('contacts');
+        loadContacts();
+      "
+    >
+      <i class="fas fa-users"></i> Contacts
+    </button>
+  </div>
+
+  <!-- Send Tab -->
+  <div id="sendTab" class="tab-content active">
+    <div class="glass-card" style="padding: 1.8rem">
+      <div class="form-group">
+        <label><i class="fas fa-user"></i> To (Name / UPI ID / Phone)</label>
+        <input
+          type="text"
+          id="recipientIdentifier"
+          class="input-field"
+          placeholder="e.g., Raj, raj@zoropay, or 9876543210"
+          autocomplete="off"
+        />
+        <div id="recipientCheck" class="recipient-check"></div>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-rupee-sign"></i> Amount</label>
+        <input
+          type="number"
+          id="sendAmount"
+          class="input-field"
+          placeholder="Enter amount"
+        />
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-sticky-note"></i> Note (optional)</label>
+        <input
+          type="text"
+          id="sendNote"
+          class="input-field"
+          placeholder="What's this for?"
+        />
+      </div>
+      <div id="transactionInfo" class="transaction-info" style="display: none">
+        <div class="info-row">
+          <span>Sending to:</span><strong id="recipientName">-</strong>
+          <span id="recipientTypeBadge" class="identifier-type-badge"></span>
+        </div>
+        <div class="info-row">
+          <span>Identifier:</span><strong id="recipientUPI">-</strong>
+        </div>
+      </div>
+      <button id="sendBtn" class="btn-primary" style="width: 100%" disabled>
+        <i class="fas fa-lock"></i> Continue to PIN
+      </button>
+    </div>
+  </div>
+
+  <!-- Request Tab -->
+  <div id="requestTab" class="tab-content">
+    <div class="glass-card" style="padding: 1.5rem">
+      <div class="incoming-section">
+        <div class="incoming-header" onclick="toggleIncomingRequests()">
+          <div class="incoming-title">
+            <i class="fas fa-download"></i>
+            <span>Money Requests Received</span>
+          </div>
+          <span id="requestsBadge" class="badge-count">0</span>
+        </div>
+        <div id="incomingListContainer" class="incoming-list">
+          <div id="incomingRequestsList" style="padding: 12px">
+            <div style="text-align: center; color: #6b7280">
+              Loading requests...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fas fa-phone"></i> Request from (Phone number)</label>
+        <input
+          type="tel"
+          id="requestPhone"
+          class="input-field"
+          placeholder="9876543210 or +919876543210"
+        />
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-rupee-sign"></i> Amount</label>
+        <input
+          type="number"
+          id="requestAmount"
+          class="input-field"
+          placeholder="₹"
+        />
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-sticky-note"></i> Note</label>
+        <input
+          type="text"
+          id="requestNote"
+          class="input-field"
+          placeholder="Reason"
+        />
+      </div>
+      <button id="requestBtn" class="btn-primary" style="width: 100%">
+        <i class="fas fa-bell"></i> Send Request
+      </button>
+    </div>
+  </div>
+
+  <!-- Contacts Tab -->
+  <div id="contactsTab" class="tab-content">
+    <div class="glass-card" style="padding: 1rem">
+      <div id="contactsList" class="contacts-list">
+        <div style="text-align: center; padding: 30px; color: #6b7280">
+          Loading contacts...
+        </div>
+      </div>
+      <button
+        onclick="showAddContactModal()"
+        style="
+          width: 100%;
+          margin-top: 16px;
+          background: #1e1e2c;
+          border: none;
+          padding: 12px;
+          border-radius: 2rem;
+          color: white;
+          cursor: pointer;
+        "
+      >
+        <i class="fas fa-plus"></i> Add Contact
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- QR Modal -->
+<div id="qrModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Scan QR Code</h3>
+      <span class="close" onclick="closeQRScanner()">&times;</span>
+    </div>
+    <div class="modal-body" style="padding: 20px">
+      <div
+        id="qr-reader"
+        style="
+          width: 100%;
+          min-height: 280px;
+          background: #000;
+          border-radius: 1rem;
+        "
+      ></div>
+      <div style="margin-top: 16px; text-align: center">
+        <label
+          for="qrFileInput"
+          style="
+            background: rgba(79, 70, 229, 0.2);
+            border: 1px solid #4f46e5;
+            border-radius: 2rem;
+            padding: 10px 20px;
+            display: inline-flex;
+            gap: 10px;
+            cursor: pointer;
+          "
+        >
+          <i class="fas fa-upload"></i> Upload QR
+        </label>
+        <input
+          type="file"
+          id="qrFileInput"
+          accept="image/*"
+          style="display: none"
+        />
+      </div>
+      <button
+        onclick="closeQRScanner()"
+        class="btn-primary"
+        style="width: 100%; margin-top: 16px"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Contact Modal -->
+<div id="addContactModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>New Contact</h3>
+      <span class="close" onclick="closeAddContactModal()">&times;</span>
+    </div>
+    <div class="modal-body" style="padding: 20px">
+      <input
+        type="text"
+        id="newContactName"
+        class="input-field"
+        placeholder="Full name"
+      />
+      <input
+        type="tel"
+        id="newContactPhone"
+        class="input-field"
+        style="margin-top: 12px"
+        placeholder="Phone number"
+      />
+      <button
+        onclick="addNewContact()"
+        class="btn-primary"
+        style="width: 100%; margin-top: 20px"
+      >
+        Save Contact
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<script>
+  let html5QrCode = null;
+  let isScannerActive = false;
+  let incomingRequestsOpen = false;
+  let currentUserData = null;
+  let isValidRecipient = false;
+  let checkTimeout = null;
+
+  // Custom Alert Function
+  function showCustomAlert(title, message, icon = "fa-exclamation-triangle") {
+    const existingAlert = document.querySelector('.custom-alert');
+    if (existingAlert) {
+      existingAlert.remove();
+    }
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'custom-alert';
+    alertDiv.innerHTML = `
+      <div class="custom-alert-content">
+        <div class="custom-alert-icon">
+          <i class="fas ${icon}"></i>
+        </div>
+        <div class="custom-alert-title">${escapeHtml(title)}</div>
+        <div class="custom-alert-message">${escapeHtml(message)}</div>
+        <button class="custom-alert-btn" onclick="this.closest('.custom-alert').remove()">
+          <i class="fas fa-check"></i> Got it
+        </button>
+      </div>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        alertDiv.remove();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+      return c;
+    });
+  }
+
+  // Fetch current user data
+  async function fetchCurrentUser() {
+    try {
+      const res = await fetch("/api/user");
+      if (res.ok) {
+        currentUserData = await res.json();
+      }
+    } catch (e) {
+      console.error("Failed to fetch user data:", e);
+    }
+  }
+
+  // Check if recipient is self
+  function isSelfTransaction(identifier) {
+    if (!currentUserData) return false;
+    
+    const cleanIdentifier = identifier.toString().toLowerCase().trim();
+    const userPhone = currentUserData.phone;
+    const userUpiId = currentUserData.upi_id ? currentUserData.upi_id.toLowerCase() : null;
+    const userName = currentUserData.name ? currentUserData.name.toLowerCase() : null;
+    
+    if (userPhone) {
+      let cleanUserPhone = userPhone.replace(/[\s\-\(\)]/g, '');
+      let cleanInputPhone = cleanIdentifier.replace(/[\s\-\(\)]/g, '');
+      
+      if (cleanUserPhone === cleanInputPhone) return true;
+      if (cleanUserPhone === '+91' + cleanInputPhone) return true;
+      if (cleanUserPhone.replace('+91', '') === cleanInputPhone) return true;
+    }
+    
+    if (userUpiId && cleanIdentifier === userUpiId) return true;
+    if (userName && cleanIdentifier === userName) return true;
+    
+    return false;
+  }
+
+  // Format Indian phone number by adding +91 prefix
+  function formatIndianPhoneNumber(inputValue) {
+    if (!inputValue || typeof inputValue !== "string") return inputValue;
+    let trimmed = inputValue.trim();
+    if (trimmed === "") return trimmed;
+    
+    if (trimmed.includes("@")) return trimmed;
+    if (trimmed.startsWith("+")) return trimmed;
+    
+    let cleaned = trimmed.replace(/[\s\-\(\)]/g, "");
+    
+    if (/^\d+$/.test(cleaned)) {
+      if (cleaned.length === 10) {
+        return "+91" + cleaned;
+      }
+      if (cleaned.length === 12 && cleaned.startsWith("91")) {
+        return "+" + cleaned;
+      }
+      if (cleaned.length === 11 && cleaned.startsWith("0")) {
+        return "+91" + cleaned.substring(1);
+      }
+    }
+    
+    return trimmed;
+  }
+
+  // Check if string looks like a valid phone number
+  function looksLikePhoneNumber(str) {
+    const cleaned = str.replace(/[\s\-\(\)\+]/g, '');
+    return /^\d{10,15}$/.test(cleaned);
+  }
+
+  // Check if string looks like a UPI ID
+  function looksLikeUpiId(str) {
+    return str.includes('@') && str.length >= 6;
+  }
+
+  // Update send button state based on both recipient and amount
+  function updateSendButtonState() {
+    const sendBtn = document.getElementById("sendBtn");
+    const amount = document.getElementById("sendAmount").value;
+    const hasValidAmount = amount && parseFloat(amount) > 0;
+    
+    console.log("updateSendButtonState - isValidRecipient:", isValidRecipient, "hasValidAmount:", hasValidAmount);
+    
+    // Enable button only if recipient is valid AND amount is valid
+    if (isValidRecipient && hasValidAmount) {
+      sendBtn.disabled = false;
+      console.log("Button ENABLED");
+    } else {
+      sendBtn.disabled = true;
+      console.log("Button DISABLED");
+    }
+  }
+
+  // OPTIMIZED: Single API call for recipient verification
+  async function checkRecipient() {
+    let identifier = document.getElementById("recipientIdentifier").value;
+    const trimmedId = identifier.trim();
+    
+    if (!trimmedId) {
+      document.getElementById("sendBtn").disabled = true;
+      document.getElementById("transactionInfo").style.display = "none";
+      document.getElementById("recipientCheck").innerHTML = "";
+      isValidRecipient = false;
+      updateSendButtonState();
+      return;
+    }
+    
+    // Format phone number if it looks like one
+    let formattedIdentifier = trimmedId;
+    if (looksLikePhoneNumber(trimmedId) && !trimmedId.startsWith('+')) {
+      formattedIdentifier = formatIndianPhoneNumber(trimmedId);
+      if (formattedIdentifier !== trimmedId) {
+        document.getElementById("recipientIdentifier").value = formattedIdentifier;
+        identifier = formattedIdentifier;
+      }
+    }
+    
+    // Quick self-check before API call
+    if (isSelfTransaction(identifier)) {
+      document.getElementById("recipientCheck").innerHTML = '<i class="fas fa-exclamation-triangle"></i> ⚠️ You cannot send money to yourself';
+      document.getElementById("recipientCheck").className = "recipient-check error";
+      document.getElementById("transactionInfo").style.display = "none";
+      isValidRecipient = false;
+      updateSendButtonState();
+      return;
+    }
+    
+    const checkDiv = document.getElementById("recipientCheck");
+    const infoDiv = document.getElementById("transactionInfo");
+    
+    // Show loading state
+    checkDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Verifying...';
+    checkDiv.className = "recipient-check info";
+    
+    try {
+      // SINGLE API CALL for verification
+      const res = await fetch("/api/find_user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: identifier }),
+      });
+      const data = await res.json();
+      
+      if (data.exists && data.exists === true) {
+        // Registered user found
+        checkDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✓ Zoro Pay user found';
+        checkDiv.className = "recipient-check success";
+        document.getElementById("recipientName").innerText = escapeHtml(data.name || "User");
+        document.getElementById("recipientUPI").innerText = escapeHtml(data.upi_id || identifier);
+        document.getElementById("recipientTypeBadge").innerHTML = '<i class="fas fa-check"></i> Registered User';
+        document.getElementById("recipientTypeBadge").style.background = "rgba(16, 185, 129, 0.2)";
+        infoDiv.style.display = "block";
+        isValidRecipient = true;
+        console.log("Registered user found - isValidRecipient set to true");
+      } 
+      else if (looksLikePhoneNumber(identifier)) {
+        // Valid external user (phone number) - ENABLE button
+        const displayPhone = identifier.startsWith('+') ? identifier : '+91' + identifier;
+        checkDiv.innerHTML = '<i class="fas fa-external-link-alt"></i> ⚡ External user - They will receive SMS invite';
+        checkDiv.className = "recipient-check warning";
+        document.getElementById("recipientName").innerText = escapeHtml(displayPhone);
+        document.getElementById("recipientUPI").innerText = escapeHtml(displayPhone);
+        document.getElementById("recipientTypeBadge").innerHTML = '<i class="fas fa-envelope"></i> Will receive SMS';
+        document.getElementById("recipientTypeBadge").style.background = "rgba(245, 158, 11, 0.2)";
+        infoDiv.style.display = "block";
+        isValidRecipient = true;  // ✅ ENABLED for external phone numbers
+        console.log("External phone number - isValidRecipient set to true");
+      } 
+      else if (looksLikeUpiId(identifier)) {
+        // Valid external UPI ID - ENABLE button
+        checkDiv.innerHTML = '<i class="fas fa-external-link-alt"></i> ⚡ External UPI ID - They will receive SMS invite';
+        checkDiv.className = "recipient-check warning";
+        document.getElementById("recipientName").innerText = "External User";
+        document.getElementById("recipientUPI").innerText = escapeHtml(identifier);
+        document.getElementById("recipientTypeBadge").innerHTML = '<i class="fas fa-envelope"></i> Will receive SMS';
+        document.getElementById("recipientTypeBadge").style.background = "rgba(245, 158, 11, 0.2)";
+        infoDiv.style.display = "block";
+        isValidRecipient = true;  // ✅ ENABLED for external UPI IDs
+        console.log("External UPI ID - isValidRecipient set to true");
+      }
+      else {
+        // Invalid identifier
+        checkDiv.innerHTML = '<i class="fas fa-question-circle"></i> Enter a valid phone number or UPI ID';
+        checkDiv.className = "recipient-check warning";
+        infoDiv.style.display = "none";
+        isValidRecipient = false;
+        console.log("Invalid identifier - isValidRecipient set to false");
+      }
+    } catch (e) {
+      console.error("Error checking recipient:", e);
+      checkDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Could not verify recipient';
+      checkDiv.className = "recipient-check error";
+      infoDiv.style.display = "none";
+      isValidRecipient = false;
+      console.log("API error - isValidRecipient set to false");
+    }
+    
+    updateSendButtonState();
+  }
+
+  // Send button click handler
+  document.getElementById("sendBtn").addEventListener("click", () => {
+    let identifier = document.getElementById("recipientIdentifier").value;
+    identifier = formatIndianPhoneNumber(identifier);
+    const amount = document.getElementById("sendAmount").value;
+    const note = document.getElementById("sendNote").value;
+    
+    if (!identifier || !amount) {
+      window.showNotification("Please fill all details", "error");
+      return;
+    }
+    
+    if (parseFloat(amount) <= 0) {
+      window.showNotification("Please enter a valid amount", "error");
+      return;
+    }
+    
+    if (!isValidRecipient) {
+      window.showNotification("Please enter a valid recipient", "error");
+      return;
+    }
+    
+    if (isSelfTransaction(identifier)) {
+      showCustomAlert(
+        "Invalid Transaction",
+        "You cannot send money to yourself. Please enter a different recipient.",
+        "fa-ban"
+      );
+      return;
+    }
+    
+    sessionStorage.setItem(
+      "pendingTransaction",
+      JSON.stringify({ 
+        identifier: identifier, 
+        amount: parseFloat(amount), 
+        note: note || "",
+        timestamp: new Date().toISOString()
+      })
+    );
+    
+    window.location.href = "/verify-pin";
+  });
+
+  // Amount input listener to enable/disable send button
+  document.getElementById("sendAmount").addEventListener("input", () => {
+    updateSendButtonState();
+  });
+  
+  // Also listen for changes to amount field (in case of number input spinners)
+  document.getElementById("sendAmount").addEventListener("change", () => {
+    updateSendButtonState();
+  });
+
+  // Debounced recipient check (faster response)
+  document.getElementById("recipientIdentifier").addEventListener("input", () => {
+    clearTimeout(checkTimeout);
+    checkTimeout = setTimeout(checkRecipient, 300); // Reduced from 500ms to 300ms
+  });
+  
+  // Also trigger check on blur (when user leaves the field)
+  document.getElementById("recipientIdentifier").addEventListener("blur", () => {
+    clearTimeout(checkTimeout);
+    checkRecipient();
+  });
+
+  function showTab(tab) {
+    document
+      .querySelectorAll(".tab-btn")
+      .forEach((btn) => btn.classList.remove("active"));
+    document
+      .querySelectorAll(".tab-content")
+      .forEach((c) => c.classList.remove("active"));
+    if (tab === "send") {
+      document.querySelector(".tab-btn:first-child").classList.add("active");
+      document.getElementById("sendTab").classList.add("active");
+    } else if (tab === "request") {
+      document.querySelectorAll(".tab-btn")[1].classList.add("active");
+      document.getElementById("requestTab").classList.add("active");
+      loadIncomingRequests();
+    } else {
+      document.querySelectorAll(".tab-btn")[2].classList.add("active");
+      document.getElementById("contactsTab").classList.add("active");
+      loadContacts();
+    }
+  }
+
+  function toggleIncomingRequests() {
+    const container = document.getElementById("incomingListContainer");
+    incomingRequestsOpen = !incomingRequestsOpen;
+    if (incomingRequestsOpen) {
+      container.classList.add("open");
+    } else {
+      container.classList.remove("open");
+    }
+  }
+
+  async function loadIncomingRequests() {
+    const listDiv = document.getElementById("incomingRequestsList");
+    if (!listDiv) return;
+    listDiv.innerHTML =
+      '<div style="text-align: center; color: #6b7280;"><i class="fas fa-spinner fa-pulse"></i> Loading requests...</div>';
+    try {
+      const res = await fetch("/api/incoming_requests");
+      if (!res.ok) throw new Error("Failed");
+      const requests = await res.json();
+      document.getElementById("requestsBadge").innerText = requests.length;
+      if (!requests.length) {
+        listDiv.innerHTML =
+          '<div style="text-align: center; padding: 24px; color: #6b7280;"><i class="fas fa-inbox"></i><br/>No pending money requests</div>';
+        return;
+      }
+      listDiv.innerHTML = "";
+      requests.forEach((req) => {
+        const card = document.createElement("div");
+        card.className = "request-card";
+        card.innerHTML = `
+                    <div class="request-header">
+                        <div class="requestor-name"><i class="fas fa-user-circle"></i> ${escapeHtml(req.requester_name || req.requester_phone)}</div>
+                        <span style="background:#f59e0b20; color:#fbbf24; padding:2px 8px; border-radius:20px; font-size:0.7rem;">pending</span>
+                    </div>
+                    <div class="request-amount">${window.formatCurrency(req.amount)}</div>
+                    <div class="request-actions">
+                        <button class="action-btn approve-btn" onclick="handleApproveRequest(${req.id}, ${req.amount}, '${escapeHtml(req.requester_phone || "").replace(/'/g, "\\'")}')"><i class="fas fa-check"></i> Approve & Pay</button>
+                        <button class="action-btn reject-btn" onclick="handleRejectRequest(${req.id})"><i class="fas fa-times"></i> Reject</button>
+                    </div>
+                `;
+        listDiv.appendChild(card);
+      });
+    } catch (err) {
+      console.error(err);
+      listDiv.innerHTML =
+        '<div style="text-align: center; padding: 24px; color: #6b7280;">Error loading requests</div>';
+    }
+  }
+
+  async function handleApproveRequest(requestId, amount, requesterPhone) {
+    if (!requesterPhone) {
+      window.showNotification("Missing requester contact", "error");
+      return;
+    }
+    const pin = prompt("Enter your PIN to approve and send money:", "");
+    if (!pin) return;
+    try {
+      const res = await fetch("/api/send_money", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: requesterPhone,
+          amount: amount,
+          note: "✅ Approved money request",
+          pin: pin,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.status === "success") {
+        await fetch(`/api/incoming_requests/${requestId}/resolve`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "paid" }),
+        });
+        window.showNotification(
+          data.message || `Paid ${window.formatCurrency(amount)} successfully!`,
+          "success",
+        );
+        loadIncomingRequests();
+      } else {
+        window.showNotification(data.error || "Payment failed", "error");
+      }
+    } catch (err) {
+      window.showNotification("Transaction error", "error");
+    }
+  }
+
+  async function handleRejectRequest(requestId) {
+    if (!confirm("Reject this money request?")) return;
+    try {
+      const res = await fetch(`/api/incoming_requests/${requestId}/resolve`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "rejected" }),
+      });
+      if (res.ok) {
+        window.showNotification("Request rejected", "success");
+        loadIncomingRequests();
+      } else {
+        window.showNotification("Failed to reject", "error");
+      }
+    } catch (err) {
+      window.showNotification("Error", "error");
+    }
+  }
+
+  document.getElementById("requestBtn").addEventListener("click", async () => {
+    let phone = document.getElementById("requestPhone").value;
+    phone = formatIndianPhoneNumber(phone);
+    const amount = document.getElementById("requestAmount").value;
+    const note = document.getElementById("requestNote").value;
+    if (!phone || !amount) {
+      window.showNotification("Enter phone & amount", "error");
+      return;
+    }
+    
+    if (isSelfTransaction(phone)) {
+      showCustomAlert(
+        "Cannot Request from Yourself",
+        "You cannot send a money request to your own account. Please enter a different phone number.",
+        "fa-user-slash"
+      );
+      return;
+    }
+    
+    const res = await fetch("/api/request_money", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, amount: parseFloat(amount), note }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      window.showNotification("Request sent", "success");
+      document.getElementById("requestPhone").value = "";
+      document.getElementById("requestAmount").value = "";
+      document.getElementById("requestNote").value = "";
+    } else window.showNotification(data.error || "Request failed", "error");
+  });
+
+  async function loadContacts() {
+    const container = document.getElementById("contactsList");
+    try {
+      const res = await fetch("/api/people");
+      const people = await res.json();
+      if (!people.length) {
+        container.innerHTML =
+          '<div style="text-align: center; padding: 40px; color: #6b7280;">No contacts saved</div>';
+        return;
+      }
+      const colors = [
+        "#4F46E5",
+        "#7C3AED",
+        "#EC4899",
+        "#F43F5E",
+        "#06B6D4",
+        "#10B981",
+      ];
+      container.innerHTML = people
+        .filter(p => {
+          if (currentUserData && p.phone === currentUserData.phone) return false;
+          return true;
+        })
+        .map((p) => {
+          const letter = p.name ? p.name.charAt(0).toUpperCase() : "📱";
+          const bg = colors[(p.name?.length || 0) % colors.length];
+          return `<div class="contact-item"><div class="contact-avatar" style="background:${bg};">${escapeHtml(letter)}</div><div class="contact-info"><div class="contact-name">${escapeHtml(p.name)}</div><div class="contact-phone">${escapeHtml(p.phone)}</div></div><button class="send-to-contact" onclick="sendToContact('${escapeHtml(p.phone).replace(/'/g, "\\'")}')">Send</button></div>`;
+        })
+        .join("");
+    } catch (e) {
+      container.innerHTML =
+        "<div style='text-align: center; padding: 40px; color: #6b7280;'>Error loading contacts</div>";
+    }
+  }
+
+  function sendToContact(phone) {
+    if (currentUserData && phone === currentUserData.phone) {
+      showCustomAlert(
+        "Cannot Send to Yourself",
+        "You cannot send money to your own account. Please select a different contact.",
+        "fa-user-slash"
+      );
+      return;
+    }
+    document.getElementById("recipientIdentifier").value = phone;
+    showTab("send");
+    // Trigger verification immediately
+    setTimeout(checkRecipient, 100);
+  }
+
+  async function startQRScanner() {
+    const modal = document.getElementById("qrModal");
+    modal.style.display = "flex";
+    if (html5QrCode && isScannerActive) {
+      try {
+        await html5QrCode.stop();
+      } catch (e) {}
+    }
+    html5QrCode = new Html5Qrcode("qr-reader");
+    try {
+      await html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          handleQRDecoded(decodedText);
+        },
+        (err) => {},
+      );
+      isScannerActive = true;
+    } catch (err) {
+      window.showNotification("Camera error", "error");
+      closeQRScanner();
+    }
+  }
+
+  function handleQRDecoded(decodedText) {
+    if (!decodedText) return;
+    if (html5QrCode && isScannerActive)
+      html5QrCode.stop().catch((e) => console.warn);
+    closeQRScanner();
+    
+    let recipientValue = decodedText.trim();
+    
+    let upiMatch = decodedText.match(/[?&]pa=([^&]+)/i);
+    if (upiMatch) {
+      recipientValue = decodeURIComponent(upiMatch[1]);
+    }
+    
+    if (isSelfTransaction(recipientValue)) {
+      showCustomAlert(
+        "Cannot Scan Your Own QR",
+        "You scanned your own QR code. Please scan another user's QR code to send money.",
+        "fa-qrcode"
+      );
+      return;
+    }
+    
+    document.getElementById("recipientIdentifier").value = recipientValue;
+    window.showNotification(`QR scanned: ${recipientValue}`, "success");
+    setTimeout(checkRecipient, 100);
+  }
+
+  function closeQRScanner() {
+    if (html5QrCode && isScannerActive)
+      html5QrCode.stop().catch((e) => console.warn);
+    document.getElementById("qrModal").style.display = "none";
+  }
+
+  document.getElementById("qrFileInput").addEventListener("change", async (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const tempScanner = new Html5Qrcode("qr-reader");
+      try {
+        const decodedText = await tempScanner.scanFile(file, false);
+        let qrText = decodedText?.decodedText || decodedText;
+        if (qrText) {
+          let recipientValue = qrText.trim();
+          let upiMatch = qrText.match(/[?&]pa=([^&]+)/i);
+          if (upiMatch) {
+            recipientValue = decodeURIComponent(upiMatch[1]);
+          }
+          
+          if (isSelfTransaction(recipientValue)) {
+            showCustomAlert(
+              "Cannot Scan Your Own QR",
+              "You uploaded your own QR code. Please scan another user's QR code.",
+              "fa-qrcode"
+            );
+            return;
+          }
+          
+          handleQRDecoded(qrText);
+        } else {
+          window.showNotification("No QR found", "error");
+        }
+      } catch (err) {
+        window.showNotification("Invalid QR image", "error");
+      }
+    }
+  });
+
+  function showAddContactModal() {
+    document.getElementById("addContactModal").style.display = "flex";
+  }
+  
+  function closeAddContactModal() {
+    document.getElementById("addContactModal").style.display = "none";
+  }
+
+  async function addNewContact() {
+    const name = document.getElementById("newContactName").value;
+    let phone = document.getElementById("newContactPhone").value;
+    if (!name || !phone) {
+      window.showNotification("Name and phone required", "error");
+      return;
+    }
+    phone = formatIndianPhoneNumber(phone);
+    
+    if (isSelfTransaction(phone)) {
+      showCustomAlert(
+        "Cannot Add Yourself",
+        "You cannot add your own number as a contact. Please enter a different phone number.",
+        "fa-user-plus"
+      );
+      return;
+    }
+    
+    const res = await fetch("/api/contacts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, name }),
+    });
+    if (res.ok) {
+      window.showNotification("Contact added", "success");
+      closeAddContactModal();
+      loadContacts();
+      document.getElementById("newContactName").value = "";
+      document.getElementById("newContactPhone").value = "";
+    } else {
+      window.showNotification("Failed to add contact", "error");
+    }
+  }
+
+  // Auto-format phone fields on blur
+  function setupAutoPhoneFormat() {
+    const phoneFields = ['recipientIdentifier', 'requestPhone', 'newContactPhone'];
+    phoneFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.addEventListener('blur', function() {
+          const formatted = formatIndianPhoneNumber(this.value);
+          if (formatted !== this.value) {
+            this.value = formatted;
+            if (fieldId === 'recipientIdentifier' && typeof checkRecipient === 'function') {
+              checkRecipient();
+            }
+          }
+        });
+      }
+    });
+  }
+
+  // Close modals when clicking outside
+  window.onclick = function (event) {
+    const qrModal = document.getElementById("qrModal");
+    const addModal = document.getElementById("addContactModal");
+    if (event.target === qrModal) closeQRScanner();
+    if (event.target === addModal) closeAddContactModal();
+  };
+
+  // Initialize
+  async function init() {
+    await fetchCurrentUser();
+    setupAutoPhoneFormat();
+    loadContacts();
+    loadIncomingRequests();
+    // Initial button state check
+    updateSendButtonState();
+  }
+  
+  init();
+
+  // Expose functions globally
+  window.showTab = showTab;
+  window.loadContacts = loadContacts;
+  window.sendToContact = sendToContact;
+  window.startQRScanner = startQRScanner;
+  window.closeQRScanner = closeQRScanner;
+  window.showAddContactModal = showAddContactModal;
+  window.closeAddContactModal = closeAddContactModal;
+  window.addNewContact = addNewContact;
+  window.toggleIncomingRequests = toggleIncomingRequests;
+  window.handleApproveRequest = handleApproveRequest;
+  window.handleRejectRequest = handleRejectRequest;
+  window.checkRecipient = checkRecipient;
+  window.showCustomAlert = showCustomAlert;
+</script>
+{% endblock %}

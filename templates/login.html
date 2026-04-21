@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Zoro Pay - Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Full screen background image */
+        body {
+            background: url('/static/logo.png') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+        }
+        
+        /* Dark overlay for better text readability */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+        }
+        
+        /* Ensure container is above overlay */
+        .container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Make login container slightly transparent for glass effect */
+        .login-container {
+            background: rgba(17, 17, 17, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Optional: Add animation to logo */
+        .logo h1 {
+            background: linear-gradient(135deg, #fff, var(--accent-blue), #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .loading-indicator {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 14px;
+            color: #ff6b6b;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="logo">
+                <h1>💰 Zoro Pay</h1>
+                <p>Your Digital Wallet</p>
+            </div>
+            
+            <div id="step1" class="step active">
+                <div class="form-group">
+                    <label for="phone">Mobile Number</label>
+                    <input type="tel" id="phone" placeholder="+91 9876543210" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label for="name">Full Name <span style="color: #888;">(Optional for existing users)</span></label>
+                    <input type="text" id="name" placeholder="John Doe" class="input-field">
+                </div>
+                <button onclick="window.checkAndProceed()" class="btn btn-primary" id="continueBtn">Continue</button>
+                <div id="step1Error" class="error-message" style="display: none;"></div>
+            </div>
+            
+            <div id="step2" class="step">
+                <div class="form-group">
+                    <label for="otp">Enter OTP</label>
+                    <input type="text" id="otp" placeholder="123456" class="input-field">
+                </div>
+                <button onclick="window.verifyOTP()" class="btn btn-primary">Verify & Create Account</button>
+                <button onclick="window.backToPhone()" class="btn btn-secondary">Back</button>
+                <div id="step2Error" class="error-message" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Referral Modal -->
+    <div id="referralModal" class="referral-modal">
+        <div class="referral-modal-content">
+            <div class="referral-modal-header">
+                <i class="fas fa-gift"></i>
+                <h2>🎉 You're New Here!</h2>
+                <p>Get ₹250 bonus instantly!</p>
+            </div>
+            <div class="referral-modal-body">
+                <div class="referral-info">
+                    <div class="bonus-amount">₹250</div>
+                    <p>Welcome Bonus for you</p>
+                    <div class="referral-badge">
+                        <i class="fas fa-star"></i> + ₹250 for your friend
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="referralCodeInput">
+                        <i class="fas fa-code"></i> Have a referral code?
+                    </label>
+                    <input type="text" id="referralCodeInput" placeholder="Enter referral code (optional)" maxlength="8" style="text-transform: uppercase;">
+                    <div id="referralValidation" class="validation-message"></div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button onclick="window.skipReferral()" class="btn-skip" id="skipBtn">
+                        <i class="fas fa-forward"></i> Skip
+                    </button>
+                    <button onclick="window.applyReferralCode()" id="applyReferralBtn" class="btn-apply">
+                        <i class="fas fa-check"></i> Apply & Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Make functions globally available
+        window.pendingUserData = null;
+        window.validatedReferralCode = null;
+        window.isProcessing = false;
+        
+        window.checkAndProceed = async function() {
+            const phoneInput = document.getElementById('phone');
+            const nameInput = document.getElementById('name');
+            const continueBtn = document.getElementById('continueBtn');
+            const errorDiv = document.getElementById('step1Error');
+            
+            if (!phoneInput) return;
+            
+            const phone = phoneInput.value;
+            const name = nameInput ? nameInput.value : '';
+            
+            if (!phone) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '📱 Please enter your phone number';
+                return;
+            }
+            
+            // Clean phone number
+            let cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+            if (!cleanPhone.startsWith('+')) {
+                if (cleanPhone.length === 10) {
+                    cleanPhone = '+91' + cleanPhone;
+                } else if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
+                    cleanPhone = '+' + cleanPhone;
+                } else {
+                    cleanPhone = '+' + cleanPhone;
+                }
+            }
+            
+            // Disable button and show loading
+            continueBtn.disabled = true;
+            continueBtn.innerHTML = '<span class="loading-indicator"></span> Checking...';
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/check_user_exists', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: cleanPhone })
+                });
+                
+                const data = await response.json();
+                
+                if (data.exists) {
+                    // Existing user - redirect to PIN page
+                    sessionStorage.setItem('pendingUserPhone', cleanPhone);
+                    window.location.href = '/pin';
+                } else {
+                    // New user - show OTP step
+                    window.pendingUserData = { phone: cleanPhone, name: name };
+                    
+                    // Send OTP
+                    const otpResponse = await fetch('/send_otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: cleanPhone, name: name })
+                    });
+                    
+                    const otpData = await otpResponse.json();
+                    
+                    if (otpResponse.ok) {
+                        // Show OTP step
+                        document.getElementById('step1').classList.remove('active');
+                        document.getElementById('step2').classList.add('active');
+                        
+                        // Pre-fill OTP if mock is available
+                        if (otpData.mock_otp) {
+                            const otpInput = document.getElementById('otp');
+                            if (otpInput) {
+                                otpInput.value = otpData.mock_otp;
+                            }
+                        }
+                        
+                        const otpErrorDiv = document.getElementById('step2Error');
+                        otpErrorDiv.style.display = 'none';
+                    } else {
+                        errorDiv.style.display = 'block';
+                        errorDiv.innerHTML = otpData.error || 'Failed to send OTP. Please try again.';
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = 'Network error. Please try again.';
+            } finally {
+                continueBtn.disabled = false;
+                continueBtn.innerHTML = 'Continue';
+            }
+        };
+        
+        window.verifyOTP = async function() {
+            const otpInput = document.getElementById('otp');
+            const otp = otpInput.value;
+            const errorDiv = document.getElementById('step2Error');
+            
+            if (!otp) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = 'Please enter OTP';
+                return;
+            }
+            
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/verify_otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: window.pendingUserData.phone,
+                        otp: otp,
+                        name: window.pendingUserData.name,
+                        referral_code: ''
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.user) {
+                    if (data.user.is_new_user) {
+                        // Show referral modal
+                        window.pendingUserData = data.user;
+                        const modal = document.getElementById('referralModal');
+                        if (modal) modal.style.display = 'block';
+                        
+                        const referralInput = document.getElementById('referralCodeInput');
+                        if (referralInput) referralInput.value = '';
+                        window.validatedReferralCode = null;
+                    } else {
+                        // Existing user login
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        if (data.token) localStorage.setItem('jwt_token', data.token);
+                        
+                        const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+                        sessionStorage.removeItem('redirectAfterLogin');
+                        window.location.href = redirectTo;
+                    }
+                } else {
+                    errorDiv.style.display = 'block';
+                    errorDiv.innerHTML = data.error || 'Invalid OTP. Please try again.';
+                }
+            } catch (error) {
+                console.error('OTP verification error:', error);
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = 'Failed to verify OTP. Please try again.';
+            }
+        };
+        
+        window.backToPhone = function() {
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('otp').value = '';
+        };
+        
+        // Referral functions
+        function initReferralValidation() {
+            const referralInput = document.getElementById('referralCodeInput');
+            if (referralInput) {
+                referralInput.addEventListener('input', async function() {
+                    const code = this.value.trim().toUpperCase();
+                    const validationDiv = document.getElementById('referralValidation');
+                    const applyBtn = document.getElementById('applyReferralBtn');
+                    
+                    if (code.length === 0) {
+                        validationDiv.innerHTML = '';
+                        validationDiv.className = 'validation-message';
+                        window.validatedReferralCode = null;
+                        if (applyBtn) applyBtn.disabled = false;
+                        return;
+                    }
+                    
+                    if (code.length < 6) {
+                        validationDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Checking...';
+                        validationDiv.className = 'validation-message';
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('/api/validate_referral_code', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ referral_code: code })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok && data.valid) {
+                            validationDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${data.message}`;
+                            validationDiv.className = 'validation-message success';
+                            window.validatedReferralCode = code;
+                            if (applyBtn) applyBtn.disabled = false;
+                        } else {
+                            validationDiv.innerHTML = `<i class="fas fa-times-circle"></i> ${data.error || 'Invalid referral code'}`;
+                            validationDiv.className = 'validation-message error';
+                            window.validatedReferralCode = null;
+                            if (applyBtn) applyBtn.disabled = true;
+                        }
+                    } catch (error) {
+                        validationDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error validating code';
+                        validationDiv.className = 'validation-message error';
+                        window.validatedReferralCode = null;
+                        if (applyBtn) applyBtn.disabled = true;
+                    }
+                });
+            }
+        }
+        
+        window.applyReferralCode = async function() {
+            if (window.isProcessing) return;
+            window.isProcessing = true;
+            
+            const applyBtn = document.getElementById('applyReferralBtn');
+            const skipBtn = document.getElementById('skipBtn');
+            
+            if (applyBtn) {
+                applyBtn.disabled = true;
+                applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            }
+            if (skipBtn) skipBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/apply_referral', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        user_id: window.pendingUserData.id,
+                        referral_code: window.validatedReferralCode || ''
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let bonusMessage = '🎉 Account created successfully! ₹100 credited to your wallet!';
+                    if (window.validatedReferralCode) {
+                        bonusMessage = '🎉 Referral code applied! ₹250 bonus added to your wallet!';
+                    }
+                    
+                    window.showNotification(bonusMessage, 'success');
+                    
+                    if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                    }
+                    
+                    const modal = document.getElementById('referralModal');
+                    if (modal) modal.style.display = 'none';
+                    
+                    const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+                    sessionStorage.removeItem('redirectAfterLogin');
+                    
+                    setTimeout(() => {
+                        window.location.href = redirectTo;
+                    }, 1500);
+                } else {
+                    window.showNotification(data.error || 'Failed to apply referral code', 'error');
+                    if (applyBtn) {
+                        applyBtn.disabled = false;
+                        applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply & Continue';
+                    }
+                    if (skipBtn) skipBtn.disabled = false;
+                    window.isProcessing = false;
+                }
+            } catch (error) {
+                console.error('Apply referral error:', error);
+                window.showNotification('Failed to apply referral code. Please try again.', 'error');
+                if (applyBtn) {
+                    applyBtn.disabled = false;
+                    applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply & Continue';
+                }
+                if (skipBtn) skipBtn.disabled = false;
+                window.isProcessing = false;
+            }
+        };
+        
+        window.skipReferral = async function() {
+            if (window.isProcessing) return;
+            
+            const modal = document.getElementById('referralModal');
+            if (modal) modal.style.display = 'none';
+            
+            window.showNotification('🎉 Account created successfully! Redirecting...', 'success');
+            localStorage.setItem('user', JSON.stringify(window.pendingUserData));
+            
+            const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+            sessionStorage.removeItem('redirectAfterLogin');
+            
+            setTimeout(() => {
+                window.location.href = redirectTo;
+            }, 1500);
+        };
+        
+        window.showNotification = function(message, type) {
+            let container = document.getElementById('notificationContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'notificationContainer';
+                container.className = 'notification-container';
+                document.body.appendChild(container);
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = message;
+            notification.onclick = () => notification.remove();
+            
+            container.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+        };
+        
+        // Initialize
+        initReferralValidation();
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('referralModal');
+            if (modal && event.target === modal) {
+                window.skipReferral();
+            }
+        };
+    </script>
+</body>
+</html>

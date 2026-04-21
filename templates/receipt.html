@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Receipt - Zoro Pay</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
+      }
+      body {
+        background: #eef2ff;
+        font-family: "Inter", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .receipt-card {
+        max-width: 420px;
+        width: 100%;
+        background: white;
+        border-radius: 2rem;
+        overflow: hidden;
+        box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
+      }
+      .receipt-header {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        padding: 24px;
+        text-align: center;
+        color: white;
+      }
+      .receipt-body {
+        padding: 24px;
+      }
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .amount {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #4f46e5;
+        text-align: center;
+        margin: 16px 0;
+      }
+      .status-badge {
+        display: inline-block;
+        background: #10b98120;
+        color: #10b981;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      .footer {
+        background: #f8fafc;
+        padding: 16px;
+        text-align: center;
+        font-size: 0.7rem;
+        color: #64748b;
+      }
+      .btn {
+        background: #4f46e5;
+        border: none;
+        padding: 12px;
+        border-radius: 2rem;
+        color: white;
+        font-weight: 600;
+        width: 100%;
+        cursor: pointer;
+        margin-top: 16px;
+      }
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+        }
+        .btn {
+          display: none;
+        }
+        .receipt-card {
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="receipt-card" id="receipt">
+      <div class="receipt-header">
+        <i
+          class="fas fa-check-circle"
+          style="font-size: 2.5rem; margin-bottom: 8px"
+        ></i>
+        <h2>Zoro Pay</h2>
+        <p>Payment Receipt</p>
+      </div>
+      <div class="receipt-body">
+        <div class="amount" id="amount">₹0.00</div>
+        <div class="detail-row">
+          <span>Transaction ID</span><strong id="txnId">-</strong>
+        </div>
+        <div class="detail-row">
+          <span>Date & Time</span><span id="date">-</span>
+        </div>
+        <div class="detail-row">
+          <span>Sender</span><span id="sender">-</span>
+        </div>
+        <div class="detail-row">
+          <span>Receiver</span><span id="receiver">-</span>
+        </div>
+        <div class="detail-row"><span>Note</span><span id="note">-</span></div>
+        <div class="detail-row">
+          <span>Status</span
+          ><span id="status" class="status-badge">Completed</span>
+        </div>
+        <button class="btn" onclick="window.print()">
+          <i class="fas fa-print"></i> Print / Save PDF
+        </button>
+        <button
+          class="btn"
+          style="background: #1e293b; margin-top: 8px"
+          onclick="location.href = '/dashboard'"
+        >
+          Back to Dashboard
+        </button>
+      </div>
+      <div class="footer">
+        <i class="fas fa-lock"></i> Secured by Zoro Pay • support@zoropay.com
+      </div>
+    </div>
+    <script>
+      const txnId = window.location.pathname.split("/").pop();
+      async function loadReceipt() {
+        try {
+          const res = await fetch(`/api/transaction/${txnId}`);
+          const txn = await res.json();
+          document.getElementById("amount").innerHTML =
+            `₹${txn.amount.toFixed(2)}`;
+          document.getElementById("txnId").innerText = txn.id;
+          document.getElementById("date").innerText = new Date(
+            txn.created_at,
+          ).toLocaleString();
+          document.getElementById("sender").innerHTML =
+            `${txn.sender_name || "External"}<br><small>${txn.sender_phone || ""}</small>`;
+          document.getElementById("receiver").innerHTML =
+            `${txn.receiver_name || "External"}<br><small>${txn.receiver_phone || ""}</small>`;
+          document.getElementById("note").innerText = txn.note || "No note";
+        } catch (e) {
+          document.querySelector(".receipt-body").innerHTML =
+            '<div style="text-align:center; padding:40px;">Transaction not found</div>';
+        }
+      }
+      loadReceipt();
+    </script>
+  </body>
+</html>

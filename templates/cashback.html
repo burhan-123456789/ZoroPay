@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Zoro Pay - Cashback | Slide to Claim</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: #0a0a0f;
+            font-family: 'Inter', sans-serif;
+            color: #eef2ff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 550px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .icon-btn {
+            background: rgba(30, 30, 44, 0.8);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 40px;
+            font-size: 1.3rem;
+            color: #cbd5e1;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:active {
+            background: #4f46e5;
+            color: white;
+            transform: scale(0.95);
+        }
+
+        h1 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e0e7ff, #a78bfa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        h1 i {
+            margin-right: 8px;
+            background: none;
+            -webkit-background-clip: unset;
+            color: #fbbf24;
+        }
+
+        .summary-card {
+            background: rgba(18, 18, 28, 0.75);
+            backdrop-filter: blur(8px);
+            border-radius: 2rem;
+            padding: 1.6rem 1rem;
+            margin-bottom: 28px;
+            text-align: center;
+            border: 1px solid rgba(79, 70, 229, 0.5);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .pending-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+
+        .pending-amount {
+            font-size: 3.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 12px 0 4px;
+        }
+
+        .note {
+            font-size: 0.75rem;
+            color: #6c7a91;
+            background: #1e1e2e;
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 40px;
+        }
+
+        .slide-wrapper {
+            margin: 20px 0 20px;
+        }
+
+        .slide-container {
+            background: #111118;
+            border-radius: 60px;
+            padding: 4px;
+            border: 1px solid #2d2d44;
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        .slide-track {
+            background: linear-gradient(105deg, #6366f1, #8b5cf6);
+            border-radius: 60px;
+            width: 80px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.02s linear;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            color: white;
+            font-size: 1.3rem;
+        }
+
+        .slide-text {
+            position: absolute;
+            left: 0;
+            right: 0;
+            text-align: center;
+            line-height: 64px;
+            pointer-events: none;
+            color: #a5b4fc;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .history-card {
+            background: #0f0f17;
+            border-radius: 1.8rem;
+            padding: 1.2rem;
+            margin-top: 28px;
+            border: 1px solid #1f1f2c;
+        }
+
+        .history-title {
+            font-weight: 600;
+            margin-bottom: 14px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 3px solid #8b5cf6;
+            padding-left: 12px;
+        }
+
+        .history-list {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #262636;
+        }
+
+        .cashback-badge {
+            background: #f59e0b20;
+            color: #fbbf24;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            display: inline-block;
+        }
+
+        .claimed-badge {
+            background: #10b98120;
+            color: #34d399;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px 12px;
+            color: #6c7a8f;
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* Enhanced Modal Styles */
+        .cashback-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.98);
+            backdrop-filter: blur(20px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            flex-direction: column;
+        }
+
+        .cashback-modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-container {
+            position: relative;
+            width: 100%;
+            max-width: 380px;
+            padding: 20px;
+        }
+
+        /* Cash Dispenser Machine */
+        .dispenser-machine {
+            background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+            border-radius: 40px;
+            padding: 25px 20px 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dispenser-machine::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .machine-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .machine-header i {
+            font-size: 3rem;
+            color: #fbbf24;
+            filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.5));
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.5)); }
+            50% { filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.8)); }
+        }
+
+        .machine-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 8px;
+            color: #e2e8f0;
+        }
+
+        .machine-subtitle {
+            font-size: 0.7rem;
+            color: #6c7a91;
+        }
+
+        /* Screen Display */
+        .machine-screen {
+            background: #0a0a0f;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #4f46e5;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(79, 70, 229, 0.2);
+        }
+
+        .amount-display {
+            text-align: center;
+        }
+
+        .amount-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .amount-value {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        /* Cash Slot */
+        .cash-slot {
+            background: #0a0a0f;
+            border-radius: 10px;
+            height: 60px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #333;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .cash-slot::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #4f46e5, transparent);
+        }
+
+        /* Flying Money Notes */
+        .notes-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .note {
+            position: absolute;
+            background: linear-gradient(135deg, #c3e0d6, #a8c5b8);
+            width: 60px;
+            height: 28px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 10px;
+            color: #3a5c4e;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            border: 1px solid #8da79d;
+            animation: flyNote 2s ease-out forwards;
+        }
+
+        .note i {
+            margin-right: 3px;
+            font-size: 8px;
+        }
+
+        @keyframes flyNote {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-200px) translateX(calc(50% - 30px)) rotate(15deg);
+                opacity: 0;
+            }
+        }
+
+        /* Particle Effects */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fbbf24;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat 1.5s ease-out forwards;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Success Message */
+        .success-message {
+            text-align: center;
+            margin-top: 25px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-icon i {
+            font-size: 2rem;
+            color: white;
+        }
+
+        .success-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 5px;
+        }
+
+        .success-subtitle {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        /* Close Button */
+        .close-modal-btn {
+            background: linear-gradient(95deg, #4f46e5, #6366f1);
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: white;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+
+        .close-modal-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 40px;
+            z-index: 5;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(79, 70, 229, 0.3);
+            border-top-color: #4f46e5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: rgba(79, 70, 229, 0.2);
+            border-radius: 3px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+            width: 0%;
+            animation: progress 3s linear forwards;
+        }
+
+        @keyframes progress {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .history-list::-webkit-scrollbar-track {
+            background: #1a1a24;
+            border-radius: 4px;
+        }
+        .history-list::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+        <button class="icon-btn" onclick="history.back()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1><i class="fas fa-gift"></i> Cashback</h1>
+        <button class="icon-btn" onclick="location.href = '/dashboard'">
+            <i class="fas fa-home"></i>
+        </button>
+    </div>
+
+    <div class="summary-card">
+        <div class="pending-label">
+            <i class="fas fa-gift"></i> Pending Cashback
+        </div>
+        <div class="pending-amount" id="pendingCashbackAmount">₹0.00</div>
+        <div class="note">Slide to claim → watch magic → instant credit</div>
+    </div>
+
+    <div class="slide-wrapper">
+        <div class="slide-container">
+            <div class="slide-text" id="slideText">👉 Slide to claim cashback 👈</div>
+            <div class="slide-track" id="slideTrack">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-card">
+        <div class="history-title">
+            <i class="fas fa-history" style="color: #a78bfa"></i> Cashback History
+        </div>
+        <div id="cashbackHistoryList" class="history-list">
+            <div class="empty-state">Loading cashback transactions...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Modal -->
+<div class="cashback-modal" id="cashbackModal">
+    <div class="modal-container">
+        <div class="dispenser-machine">
+            <div class="machine-header">
+                <i class="fas fa-coins"></i>
+                <div class="machine-title">Cash Dispenser</div>
+                <div class="machine-subtitle">Processing your cashback</div>
+            </div>
+
+            <div class="machine-screen">
+                <div class="amount-display">
+                    <div class="amount-label">Claiming Amount</div>
+                    <div class="amount-value" id="modalAmount">₹0.00</div>
+                </div>
+            </div>
+
+            <div class="cash-slot" id="cashSlot">
+                <div class="notes-container" id="notesContainer"></div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+
+            <div class="success-message" id="successMessage" style="display: none;">
+                <div class="success-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="success-title">Cashback Credited!</div>
+                <div class="success-subtitle">Amount added to your wallet</div>
+            </div>
+
+            <button class="close-modal-btn" id="closeModalBtn" style="display: none;">Continue to Dashboard →</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let totalPending = 0;
+    let currentClaimAmount = 0;
+    let isSliding = false;
+    let startX = 0;
+    let currentTranslate = 0;
+    let maxTranslate = 0;
+    let slideTrack = document.getElementById("slideTrack");
+    let slideContainer = document.querySelector(".slide-container");
+    let isClaimingInProgress = false;
+    let animationTimeout = null;
+
+    window.formatCurrency = function(amount) {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(amount);
+    };
+
+    window.showNotification = function(msg, type = "info") {
+        let toast = document.createElement("div");
+        toast.innerText = msg;
+        toast.style.position = "fixed";
+        toast.style.bottom = "30px";
+        toast.style.left = "50%";
+        toast.style.transform = "translateX(-50%)";
+        toast.style.backgroundColor = type === "success" ? "#10b981" : "#ef4444";
+        toast.style.color = "white";
+        toast.style.padding = "12px 24px";
+        toast.style.borderRadius = "60px";
+        toast.style.fontWeight = "600";
+        toast.style.zIndex = "2100";
+        toast.style.fontSize = "0.9rem";
+        toast.style.boxShadow = "0 8px 20px rgba(0,0,0,0.3)";
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    };
+
+    // Create flying notes animation
+    function createFlyingNotes(amount) {
+        const container = document.getElementById('notesContainer');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        const noteCount = Math.min(Math.floor(amount / 50) + 2, 12);
+        
+        for (let i = 0; i < noteCount; i++) {
+            setTimeout(() => {
+                const note = document.createElement('div');
+                note.className = 'note';
+                const randomX = Math.random() * 60 - 30;
+                const randomDelay = Math.random() * 0.5;
+                note.style.left = `calc(50% + ${randomX}px)`;
+                note.style.animationDelay = `${randomDelay}s`;
+                note.innerHTML = '<i class="fas fa-rupee-sign"></i> ' + Math.floor(amount / noteCount);
+                container.appendChild(note);
+                
+                setTimeout(() => note.remove(), 2000);
+            }, i * 100);
+        }
+    }
+
+    // Create particle effects
+    function createParticles() {
+        const slot = document.getElementById('cashSlot');
+        if (!slot) return;
+        
+        const rect = slot.getBoundingClientRect();
+        const particleCount = 30;
+        
+        for (let i = 0; i < particleCount; i++) {
+            setTimeout(() => {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const randomX = rect.left + rect.width / 2 + (Math.random() - 0.5) * 100;
+                const randomY = rect.top + rect.height / 2;
+                particle.style.left = randomX + 'px';
+                particle.style.top = randomY + 'px';
+                particle.style.position = 'fixed';
+                document.body.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 1500);
+            }, i * 50);
+        }
+    }
+
+    // Show enhanced modal with animation
+    async function showCashbackModal(amount) {
+        const modal = document.getElementById('cashbackModal');
+        const modalAmount = document.getElementById('modalAmount');
+        const successMessage = document.getElementById('successMessage');
+        const closeBtn = document.getElementById('closeModalBtn');
+        
+        modalAmount.textContent = window.formatCurrency(amount);
+        successMessage.style.display = 'none';
+        closeBtn.style.display = 'none';
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Stage 1: Show dispenser and start progress (0-2 seconds)
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Stage 2: Start dispensing notes (1-2.5 seconds)
+        createFlyingNotes(amount);
+        
+        // Stage 3: Create particle effects (1.5 seconds)
+        setTimeout(() => {
+            createParticles();
+        }, 1500);
+        
+        // Stage 4: Show success message (3 seconds)
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        successMessage.style.display = 'block';
+        closeBtn.style.display = 'block';
+        
+        // Add celebration effect
+        const machine = document.querySelector('.dispenser-machine');
+        machine.style.boxShadow = '0 0 30px rgba(16, 185, 129, 0.3)';
+        machine.style.borderColor = '#10b981';
+        
+        // Close button handler
+        closeBtn.onclick = () => {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            if (typeof refreshDashboard === 'function') {
+                refreshDashboard();
+            }
+        };
+        
+        // Auto close after 5 seconds
+        setTimeout(() => {
+            if (modal.classList.contains('active')) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+                if (typeof refreshDashboard === 'function') {
+                    refreshDashboard();
+                }
+            }
+        }, 8000);
+    }
+
+    async function fetchPendingCashback() {
+        try {
+            const response = await fetch("/api/cashback/pending");
+            if (response.ok) {
+                const data = await response.json();
+                totalPending = data.pending_total || 0;
+                document.getElementById("pendingCashbackAmount").innerText = window.formatCurrency(totalPending);
+                renderHistory(data.history || []);
+                
+                const slideTrackEl = document.getElementById("slideTrack");
+                const slideTextSpan = document.getElementById("slideText");
+                if (totalPending <= 0) {
+                    if (slideTrackEl) {
+                        slideTrackEl.style.opacity = "0.5";
+                        slideTrackEl.style.pointerEvents = "none";
+                    }
+                    slideTextSpan.innerHTML = "✨ No cashback to claim ✨";
+                } else {
+                    if (slideTrackEl) {
+                        slideTrackEl.style.opacity = "1";
+                        slideTrackEl.style.pointerEvents = "auto";
+                    }
+                    slideTextSpan.innerHTML = "👉 Slide to claim cashback 👈";
+                }
+                return data;
+            }
+        } catch (err) {
+            console.error("Error fetching pending cashback:", err);
+        }
+        return null;
+    }
+
+    async function renderHistory(cashbacks) {
+        const container = document.getElementById("cashbackHistoryList");
+        if (!cashbacks || cashbacks.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><p>No cashback earned yet</p><small>Send money to earn cashback!</small></div>';
+            return;
+        }
+        
+        let html = "";
+        const sorted = [...cashbacks].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        for (let cb of sorted) {
+            let isClaimed = cb.claimed === 1;
+            let dateStr = new Date(cb.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+            let timeStr = new Date(cb.created_at).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' });
+            
+            html += `
+                <div class="history-item">
+                    <div>
+                        <div style="font-weight: 600;">Transaction: ${window.formatCurrency(cb.transaction_amount)}</div>
+                        <div style="font-size:0.7rem; color:#6b7280;">${dateStr} at ${timeStr} • ${(cb.percentage || 0).toFixed(1)}% cashback</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="cashback-badge ${isClaimed ? "claimed-badge" : ""}">${window.formatCurrency(cb.cashback_amount)}</div>
+                        <div style="font-size:0.65rem; margin-top: 4px;">${isClaimed ? "✅ Claimed" : "⏳ Pending"}</div>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
+    async function claimAllCashback() {
+        if (totalPending <= 0) {
+            window.showNotification("No pending cashback to claim", "error");
+            return false;
+        }
+        
+        if (isClaimingInProgress) return false;
+        isClaimingInProgress = true;
+        
+        currentClaimAmount = totalPending;
+        
+        // Show enhanced modal
+        await showCashbackModal(currentClaimAmount);
+        
+        try {
+            const response = await fetch("/api/cashback/claim", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.claimed_amount > 0) {
+                window.showNotification(`🎉 ${window.formatCurrency(data.claimed_amount)} cashback added to wallet!`, "success");
+                await fetchPendingCashback();
+                
+                // Update dashboard
+                sessionStorage.setItem('cashback_claimed', 'true');
+                if (window.opener || window.parent) {
+                    try {
+                        window.parent.postMessage({ type: 'CASHBACK_CLAIMED', amount: data.claimed_amount }, '*');
+                    } catch(e) {}
+                }
+                return true;
+            } else {
+                window.showNotification(data.error || "Failed to claim cashback", "error");
+                return false;
+            }
+        } catch (err) {
+            console.error("Error claiming cashback:", err);
+            window.showNotification("Network error while claiming cashback", "error");
+            return false;
+        } finally {
+            isClaimingInProgress = false;
+            resetSlide();
+        }
+    }
+
+    function resetSlide() {
+        if (slideTrack) {
+            slideTrack.style.transform = `translateX(0px)`;
+            currentTranslate = 0;
+        }
+        isSliding = false;
+    }
+
+    function initSlide() {
+        if (!slideTrack || !slideContainer) return;
+        
+        const updateMaxTranslate = () => {
+            const containerRect = slideContainer.getBoundingClientRect();
+            const trackWidth = slideTrack.offsetWidth;
+            maxTranslate = containerRect.width - trackWidth - 8;
+        };
+        updateMaxTranslate();
+        window.addEventListener('resize', updateMaxTranslate);
+        
+        const onTouchStart = (e) => {
+            if (totalPending <= 0 || isClaimingInProgress) return;
+            isSliding = true;
+            startX = e.touches ? e.touches[0].clientX : e.clientX;
+            slideTrack.style.transition = "none";
+        };
+        
+        const onMove = (e) => {
+            if (!isSliding || totalPending <= 0 || isClaimingInProgress) return;
+            e.preventDefault();
+            let currentX = e.touches ? e.touches[0].clientX : e.clientX;
+            let diff = currentX - startX;
+            let newTranslate = Math.min(Math.max(0, diff), maxTranslate);
+            currentTranslate = newTranslate;
+            slideTrack.style.transform = `translateX(${currentTranslate}px)`;
+            
+            if (currentTranslate >= maxTranslate - 10 && totalPending > 0 && !isClaimingInProgress) {
+                isSliding = false;
+                claimAllCashback();
+                resetSlide();
+            }
+        };
+        
+        const onEnd = () => {
+            if (!isSliding) return;
+            isSliding = false;
+            slideTrack.style.transition = "transform 0.2s ease";
+            if (currentTranslate < maxTranslate - 15) {
+                resetSlide();
+            }
+        };
+        
+        slideTrack.addEventListener("touchstart", onTouchStart);
+        slideTrack.addEventListener("mousedown", onTouchStart);
+        window.addEventListener("touchmove", onMove);
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("touchend", onEnd);
+        window.addEventListener("mouseup", onEnd);
+    }
+
+    function refreshDashboard() {
+        if (sessionStorage.getItem('cashback_claimed') === 'true') {
+            sessionStorage.removeItem('cashback_claimed');
+        }
+        if (window.location.href.includes('cashback')) {
+            // Don't redirect, just refresh data
+            fetchPendingCashback();
+        }
+    }
+
+    // Initialize
+    fetchPendingCashback().then(() => {
+        initSlide();
+    });
+
+    // Check for session storage on load
+    if (sessionStorage.getItem('cashback_claimed') === 'true') {
+        sessionStorage.removeItem('cashback_claimed');
+        fetchPendingCashback();
+    }
+</script>
+</body>
+</html>

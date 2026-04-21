@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+    />
+
+    <!-- PWA Meta Tags - Modern standards -->
+    <link rel="manifest" href="/manifest.json?v=3" />
+    <meta name="theme-color" content="#4F46E5" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <!-- Mobile app capabilities (modern) -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Zoro Pay" />
+
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="72x72"
+      href="/static/icon-72.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="/static/icon-96.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="128x128"
+      href="/static/icon-128.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="144x144"
+      href="/static/icon-144.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="152x152"
+      href="/static/icon-152.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/static/icon-192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="384x384"
+      href="/static/icon-384.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/static/icon-512.png"
+    />
+
+    <!-- Apple iOS/iPadOS -->
+    <link rel="apple-touch-icon" sizes="57x57" href="/static/icon-72.png" />
+    <link rel="apple-touch-icon" sizes="60x60" href="/static/icon-72.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="/static/icon-72.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="/static/icon-76.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="/static/icon-128.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/static/icon-128.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/static/icon-144.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/static/icon-152.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/static/icon-152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icon-192.png" />
+
+    <!-- Apple Startup Images for iOS -->
+    <link rel="apple-touch-startup-image" href="/static/icon-512.png" />
+
+    <!-- Windows -->
+    <meta name="msapplication-TileImage" content="/static/icon-144.png" />
+    <meta name="msapplication-TileColor" content="#4F46E5" />
+
+    <!-- Safari Pinned Tab -->
+    <link rel="mask-icon" href="/static/icon-192.png" color="#4F46E5" />
+
+    <!-- Fullscreen options -->
+    <meta name="full-screen" content="yes" />
+    <meta name="browsermode" content="application" />
+
+    <!-- Dynamic Title Block -->
+    <title>{% block title %}Zoro Pay{% endblock %}</title>
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Common Base Styles -->
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        /* Disable text selection on long press for better mobile UX */
+        -webkit-touch-callout: none; /* iOS Safari - Disable callout (popup) on long press */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version */
+      }
+
+      /* Allow text selection on specific elements where needed */
+      input,
+      textarea,
+      [contenteditable="true"],
+      .selectable-text {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+      }
+
+      body {
+        background: radial-gradient(circle at 10% 20%, #0a0a0f, #000000);
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        color: #ffffff;
+        min-height: 100vh;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1e1e2a;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #4f46e5;
+        border-radius: 10px;
+      }
+
+      /* Common utility classes */
+      .container {
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 20px 18px 90px;
+        min-height: 100vh;
+      }
+
+      .glass-card {
+        background: rgba(18, 18, 28, 0.7);
+        backdrop-filter: blur(16px);
+        border-radius: 2rem;
+        border: 1px solid rgba(79, 70, 229, 0.3);
+      }
+
+      .btn-primary {
+        background: linear-gradient(95deg, #4f46e5, #6366f1);
+        border: none;
+        padding: 14px;
+        border-radius: 2rem;
+        font-weight: 700;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-primary:active {
+        transform: scale(0.97);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background: rgba(79, 70, 229, 0.3);
+        border: 1px solid #4f46e5;
+        padding: 14px;
+        border-radius: 2rem;
+        font-weight: 700;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      /* Header */
+      .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        padding: 8px 0;
+      }
+
+      .logo-area h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(125deg, #ffffff, #a78bfa, #4f46e5);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        letter-spacing: -0.3px;
+      }
+
+      .logo-area p {
+        font-size: 0.7rem;
+        color: #9ca3af;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      .icon-btn {
+        background: rgba(20, 20, 30, 0.7);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(79, 70, 229, 0.4);
+        width: 44px;
+        height: 44px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: #e0e7ff;
+        cursor: pointer;
+        transition: all 0.25s ease;
+      }
+
+      .icon-btn:hover {
+        background: #4f46e5;
+        border-color: #818cf8;
+        transform: translateY(-2px);
+      }
+
+      /* Hamburger Menu */
+      .hamburger-menu {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        background: rgba(10, 10, 18, 0.98);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(79, 70, 229, 0.4);
+        z-index: 1000;
+        transition: left 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        padding: 80px 20px 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .hamburger-menu.open {
+        left: 0;
+      }
+
+      .menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: 0.2s;
+      }
+
+      .menu-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 18px;
+        background: rgba(30, 30, 44, 0.6);
+        border-radius: 28px;
+        color: #e2e8f0;
+        font-weight: 500;
+        transition: 0.2s;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+
+      .menu-item i {
+        width: 24px;
+        font-size: 1.1rem;
+        color: #a5b4fc;
+      }
+
+      .menu-item:hover {
+        background: #4f46e5;
+        border-color: #818cf8;
+        transform: translateX(6px);
+      }
+
+      .menu-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(79, 70, 229, 0.3);
+        border-radius: 30px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .menu-close:hover {
+        background: #4f46e5;
+      }
+
+      /* Floating Bottom Navigation */
+      .bottom-nav {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 480px;
+        background: rgba(15, 15, 23, 0.95);
+        backdrop-filter: blur(20px);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 14px 24px;
+        border-radius: 80px;
+        border: 1px solid rgba(79, 70, 229, 0.4);
+        z-index: 100;
+        box-shadow:
+          0 8px 25px rgba(0, 0, 0, 0.3),
+          0 0 0 0.5px rgba(79, 70, 229, 0.2);
+        gap: 16px;
+      }
+
+      /* Inner glow effect */
+      .bottom-nav::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 15%;
+        right: 15%;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(79, 70, 229, 0.6),
+          transparent
+        );
+        border-radius: 100%;
+      }
+
+      .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 8px 16px;
+        border-radius: 50px;
+        position: relative;
+        flex: 1;
+        max-width: 100px;
+      }
+
+      .nav-item:hover {
+        color: #a78bfa;
+        background: rgba(79, 70, 229, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .nav-item.active {
+        color: #4f46e5;
+        background: rgba(79, 70, 229, 0.15);
+      }
+
+      .nav-item i {
+        font-size: 1.3rem;
+        margin-bottom: 4px;
+      }
+
+      .nav-item span {
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+      }
+
+      /* Active indicator line */
+      .nav-item.active::after {
+        content: "";
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30px;
+        height: 3px;
+        background: linear-gradient(90deg, #4f46e5, #818cf8);
+        border-radius: 3px;
+        animation: activeIndicator 0.3s ease;
+      }
+
+      @keyframes activeIndicator {
+        from {
+          width: 0;
+          opacity: 0;
+        }
+        to {
+          width: 30px;
+          opacity: 1;
+        }
+      }
+
+      /* Toast notifications */
+      .notification-container {
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        width: auto;
+        max-width: 90%;
+      }
+
+      .notification {
+        background: #1e1e2c;
+        backdrop-filter: blur(12px);
+        border-left: 4px solid #4f46e5;
+        padding: 12px 22px;
+        border-radius: 60px;
+        font-size: 0.85rem;
+        color: #f1f5f9;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        animation: slideUp 0.25s ease;
+        text-align: center;
+      }
+
+      .notification.success {
+        border-left-color: #10b981;
+      }
+
+      .notification.error {
+        border-left-color: #ef4444;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px) translateX(-50%);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) translateX(-50%);
+        }
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.6s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 480px) {
+        .bottom-nav {
+          width: 92%;
+          padding: 10px 16px;
+          bottom: 15px;
+          gap: 8px;
+        }
+
+        .nav-item {
+          padding: 6px 8px;
+        }
+
+        .nav-item i {
+          font-size: 1.2rem;
+        }
+
+        .nav-item span {
+          font-size: 0.65rem;
+        }
+
+        .nav-item.active::after {
+          width: 24px;
+          bottom: -4px;
+        }
+
+        .notification-container {
+          bottom: 85px;
+        }
+      }
+
+      /* For smaller screens */
+      @media (max-width: 380px) {
+        .bottom-nav {
+          padding: 8px 12px;
+          gap: 4px;
+        }
+
+        .nav-item {
+          padding: 5px 6px;
+        }
+
+        .nav-item i {
+          font-size: 1.1rem;
+        }
+
+        .nav-item span {
+          font-size: 0.6rem;
+        }
+
+        .nav-item.active::after {
+          width: 20px;
+          bottom: -3px;
+        }
+      }
+
+      /* Safe area support for notched phones */
+      @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        .bottom-nav {
+          margin-bottom: env(safe-area-inset-bottom);
+        }
+      }
+
+      /* Hide bottom nav on print */
+      @media print {
+        .bottom-nav {
+          display: none;
+        }
+      }
+    </style>
+
+    {% block extra_styles %}{% endblock %}
+  </head>
+  <body>
+    <!-- Hamburger Menu -->
+    <div class="hamburger-menu" id="hamburgerMenu">
+      <div class="menu-close" id="closeMenuBtn">
+        <i class="fas fa-times"></i>
+      </div>
+      <div class="menu-item" onclick="location.href = '/dashboard'">
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+      </div>
+      <div class="menu-item" onclick="location.href = '/send'">
+        <i class="fas fa-paper-plane"></i> Send Money
+      </div>
+      <div class="menu-item" onclick="location.href = '/cashback'">
+        <i class="fas fa-coins"></i> Cashback Vault
+      </div>
+      <div class="menu-item" onclick="location.href = '/analytics'">
+        <i class="fas fa-chart-line"></i> Analytics
+      </div>
+      <div class="menu-item" onclick="location.href = '/all-transactions'">
+        <i class="fas fa-exchange-alt"></i> Transactions
+      </div>
+      <div class="menu-item" onclick="location.href = '/contacts-page'">
+        <i class="fas fa-address-book"></i> Contacts
+      </div>
+      <div class="menu-item" onclick="location.href = '/profile'">
+        <i class="fas fa-user-circle"></i> Profile
+      </div>
+      <div class="menu-item" onclick="location.href = '/settings'">
+        <i class="fas fa-sliders-h"></i> Settings
+      </div>
+      <div class="menu-item" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </div>
+    </div>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Header -->
+    <div class="container">
+      <div class="page-header">
+        <div class="logo-area">
+          <h1>Zoro Pay</h1>
+          <p>Secure & Instant</p>
+        </div>
+        <div class="header-actions">
+          <div class="icon-btn" id="hamburgerBtn">
+            <i class="fas fa-bars"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      {% block content %}{% endblock %}
+    </div>
+
+    <!-- Floating Bottom Navigation -->
+    {% block bottom_nav %}
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="location.href = '/dashboard'">
+        <i class="fas fa-home"></i><span>Home</span>
+      </button>
+      <button class="nav-item" onclick="location.href = '/send'">
+        <i class="fas fa-paper-plane"></i><span>Send</span>
+      </button>
+      <button class="nav-item" onclick="location.href = '/all-transactions'">
+        <i class="fas fa-history"></i><span>History</span>
+      </button>
+      <button class="nav-item" onclick="location.href = '/profile'">
+        <i class="fas fa-user"></i><span>Profile</span>
+      </button>
+    </div>
+    {% endblock %}
+
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <!-- Common Scripts -->
+    <script>
+      // Global helper functions
+      window.formatCurrency = function (amount) {
+        if (amount === undefined || amount === null) return "₹0.00";
+        const num = parseFloat(amount);
+        if (isNaN(num)) return "₹0.00";
+        return "₹" + num.toFixed(2);
+      };
+
+      window.escapeHtml = function (str) {
+        if (!str) return "";
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      };
+
+      window.showNotification = function (message, type = "success") {
+        let container = document.getElementById("notificationContainer");
+        if (!container) {
+          container = document.createElement("div");
+          container.id = "notificationContainer";
+          container.className = "notification-container";
+          document.body.appendChild(container);
+        }
+
+        const notification = document.createElement("div");
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `<i class="fas fa-${type === "success" ? "check-circle" : "exclamation-circle"}"></i> ${message}`;
+        notification.onclick = () => notification.remove();
+
+        container.appendChild(notification);
+        setTimeout(() => notification.remove(), 5000);
+      };
+
+      window.logout = async function () {
+        try {
+          await fetch("/logout", { method: "POST" });
+          localStorage.removeItem("user");
+          localStorage.removeItem("jwt_token");
+          window.showNotification("Logged out successfully", "success");
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 1000);
+        } catch (error) {
+          console.error("Logout error:", error);
+        }
+      };
+
+      // Hamburger menu functions
+      function initHamburger() {
+        const menu = document.getElementById("hamburgerMenu");
+        const overlay = document.getElementById("menuOverlay");
+        const openBtn = document.getElementById("hamburgerBtn");
+        const closeBtn = document.getElementById("closeMenuBtn");
+
+        if (!menu || !overlay) return;
+
+        function openMenu() {
+          menu.classList.add("open");
+          overlay.classList.add("active");
+        }
+        function closeMenu() {
+          menu.classList.remove("open");
+          overlay.classList.remove("active");
+        }
+        if (openBtn) openBtn.addEventListener("click", openMenu);
+        if (closeBtn) closeBtn.addEventListener("click", closeMenu);
+        if (overlay) overlay.addEventListener("click", closeMenu);
+      }
+
+      // Set active nav item based on current path
+      function setActiveNavItem() {
+        const currentPath = window.location.pathname;
+        const navItems = document.querySelectorAll(".nav-item");
+
+        navItems.forEach((item) => {
+          const onclickAttr = item.getAttribute("onclick");
+          if (onclickAttr) {
+            if (currentPath === "/" && onclickAttr.includes("/dashboard")) {
+              item.classList.add("active");
+            } else if (onclickAttr.includes(currentPath)) {
+              item.classList.add("active");
+            } else if (
+              currentPath === "/all-transactions" &&
+              onclickAttr.includes("/all-transactions")
+            ) {
+              item.classList.add("active");
+            } else if (
+              currentPath.includes("/transaction-history") &&
+              onclickAttr.includes("/all-transactions")
+            ) {
+              item.classList.add("active");
+            } else {
+              item.classList.remove("active");
+            }
+          }
+        });
+      }
+
+      // Service Worker Registration
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker
+            .register("/service-worker.js", { scope: "/" })
+            .then(function (registration) {
+              console.log("Service Worker registered:", registration.scope);
+            })
+            .catch(function (error) {
+              console.log("Service Worker registration failed:", error);
+            });
+        });
+      }
+
+      // Initialize hamburger and active nav when DOM is ready
+      document.addEventListener("DOMContentLoaded", function () {
+        initHamburger();
+        setActiveNavItem();
+      });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+  </body>
+</html>

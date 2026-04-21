@@ -1,0 +1,404 @@
+{% extends "base.html" %} {% block title %}Analytics - Zoro Pay{% endblock %} {%
+block extra_styles %}
+<style>
+  .month-amount-card {
+    background: linear-gradient(145deg, #1e1e30, #0f0f1a);
+    border-radius: 2rem;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 24px;
+    border: 1px solid rgba(79, 70, 229, 0.3);
+  }
+  .month-label {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    margin-bottom: 12px;
+  }
+  .month-amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #a78bfa;
+  }
+  .chart-card {
+    background: rgba(18, 18, 28, 0.7);
+    backdrop-filter: blur(12px);
+    border-radius: 1.5rem;
+    padding: 1.2rem;
+    margin-bottom: 28px;
+    border: 1px solid rgba(79, 70, 229, 0.3);
+  }
+  .chart-title {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+    color: #9ca3af;
+  }
+  .months-carousel {
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    white-space: nowrap;
+    padding: 8px 0;
+    margin-bottom: 24px;
+  }
+  .months-carousel::-webkit-scrollbar {
+    height: 4px;
+  }
+  .months-carousel::-webkit-scrollbar-track {
+    background: #1e1e30;
+    border-radius: 10px;
+  }
+  .months-carousel::-webkit-scrollbar-thumb {
+    background: #4f46e5;
+    border-radius: 10px;
+  }
+  .month-chip {
+    display: inline-block;
+    background: rgba(18, 18, 28, 0.8);
+    border: 1px solid rgba(79, 70, 229, 0.3);
+    border-radius: 2rem;
+    padding: 10px 22px;
+    margin-right: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .month-chip.active {
+    background: linear-gradient(95deg, #4f46e5, #6366f1);
+    color: white;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  }
+  .history-section {
+    margin-top: 8px;
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(79, 70, 229, 0.3);
+  }
+  .transaction-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .transaction-item {
+    background: #0f0f17;
+    border-radius: 1rem;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 3px solid #4f46e5;
+  }
+  .transaction-amount.sent {
+    color: #f43f5e;
+  }
+  .transaction-amount.received {
+    color: #10b981;
+  }
+  .transaction-badge {
+    font-size: 0.65rem;
+    background: rgba(79, 70, 229, 0.2);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <div class="page-header">
+    <button class="icon-btn" onclick="history.back()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1><i class="fas fa-chart-line"></i> Analytics</h1>
+    <div style="width: 44px"></div>
+  </div>
+
+  <div class="month-amount-card">
+    <div class="month-label">
+      <i class="fas fa-calendar-alt"></i> TOTAL SPENT
+    </div>
+    <div class="month-amount" id="selectedMonthAmount">₹0</div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">
+      <span
+        ><i class="fas fa-chart-line" style="color: #4f46e5"></i> Monthly
+        spending trend</span
+      >
+      <span
+        id="selectedMonthBadge"
+        style="
+          background: rgba(79, 70, 229, 0.2);
+          padding: 4px 12px;
+          border-radius: 20px;
+        "
+        >Select a month</span
+      >
+    </div>
+    <canvas id="spendingChart"></canvas>
+  </div>
+
+  <div class="months-carousel" id="monthsCarousel"></div>
+
+  <div class="history-section">
+    <div class="section-header">
+      <h3><i class="fas fa-history"></i> Transaction History</h3>
+    </div>
+    <div id="transactionHistoryContainer">
+      <div class="empty-state">
+        <i class="fas fa-spinner fa-pulse"></i> Loading transactions...
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  let chart = null;
+  let allMonthlyData = [];
+  let currentSelectedMonthKey = null;
+  let allTransactions = [];
+
+  async function fetchMonthlyAnalytics() {
+    try {
+      const res = await fetch("/api/analytics/monthly_spending");
+      return await res.json();
+    } catch (e) {
+      return { months: [], amounts: [], received_amounts: [] };
+    }
+  }
+
+  async function fetchAllTransactions() {
+    try {
+      const res = await fetch("/api/transactions");
+      return await res.json();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function parseMonthToKey(monthLabel) {
+    const parts = monthLabel.split(" ");
+    if (parts.length !== 2) return monthLabel.toLowerCase().replace(" ", "-");
+    const monthNames = [
+      "jan",
+      "feb",
+      "mar",
+      "apr",
+      "may",
+      "jun",
+      "jul",
+      "aug",
+      "sep",
+      "oct",
+      "nov",
+      "dec",
+    ];
+    const monthStr = parts[0].toLowerCase();
+    const year = parts[1];
+    const monthIndex = monthNames.indexOf(monthStr);
+    if (monthIndex === -1) return `${year}-01`;
+    const monthNum = (monthIndex + 1).toString().padStart(2, "0");
+    return `${year}-${monthNum}`;
+  }
+
+  function buildMonthlyData(apiData) {
+    const monthsList = apiData.months || [];
+    const sentAmounts = apiData.amounts || [];
+    const result = [];
+    for (let i = 0; i < monthsList.length; i++) {
+      result.push({
+        monthLabel: monthsList[i],
+        monthKey: parseMonthToKey(monthsList[i]),
+        sentAmount: sentAmounts[i] || 0,
+        totalSpent: sentAmounts[i] || 0,
+      });
+    }
+    return result.sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+  }
+
+  function renderLineChart(monthlyData, selectedMonthKey) {
+    const ctx = document.getElementById("spendingChart").getContext("2d");
+    if (chart) chart.destroy();
+
+    if (!monthlyData.length) {
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: ["No Data"],
+          datasets: [{ data: [0], borderColor: "#8b5cf6" }],
+        },
+      });
+      return;
+    }
+
+    const labels = monthlyData.map((d) => d.monthLabel);
+    const spendingData = monthlyData.map((d) => d.sentAmount);
+    const selectedIndex = monthlyData.findIndex(
+      (d) => d.monthKey === selectedMonthKey,
+    );
+
+    chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Amount Spent",
+            data: spendingData,
+            borderColor: "#8b5cf6",
+            backgroundColor: "rgba(139, 92, 246, 0.08)",
+            borderWidth: 2.5,
+            pointRadius: monthlyData.map((_, idx) =>
+              idx === selectedIndex ? 8 : 4,
+            ),
+            pointBackgroundColor: monthlyData.map((_, idx) =>
+              idx === selectedIndex ? "#f59e0b" : "#a78bfa",
+            ),
+            fill: true,
+            tension: 0.3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (ctx) => `₹${ctx.raw.toFixed(2)}` } },
+        },
+        scales: {
+          y: { ticks: { color: "#9ca3af", callback: (v) => "₹" + v } },
+          x: { ticks: { color: "#9ca3af", maxRotation: 35 } },
+        },
+      },
+    });
+  }
+
+  function initMonthsCarousel(monthlyData) {
+    const carousel = document.getElementById("monthsCarousel");
+    if (!monthlyData.length) {
+      carousel.innerHTML =
+        '<div style="padding:12px; color:#6b7280;">No data available</div>';
+      return;
+    }
+
+    carousel.innerHTML = monthlyData
+      .map(
+        (item) =>
+          `<div class="month-chip" data-month-key="${item.monthKey}" data-sent="${item.sentAmount}">
+                ${item.monthLabel}
+            </div>`,
+      )
+      .join("");
+
+    document.querySelectorAll(".month-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        document
+          .querySelectorAll(".month-chip")
+          .forEach((c) => c.classList.remove("active"));
+        chip.classList.add("active");
+        const monthKey = chip.dataset.monthKey;
+        const monthData = monthlyData.find((m) => m.monthKey === monthKey);
+        if (monthData) {
+          selectMonth(monthKey, monthData.monthLabel, monthData.sentAmount);
+        }
+      });
+    });
+
+    if (monthlyData.length) {
+      const lastMonth = monthlyData[monthlyData.length - 1];
+      const lastChip = carousel.children[monthlyData.length - 1];
+      if (lastChip) lastChip.classList.add("active");
+      selectMonth(
+        lastMonth.monthKey,
+        lastMonth.monthLabel,
+        lastMonth.sentAmount,
+      );
+    }
+  }
+
+  function selectMonth(monthKey, monthLabel, sentAmount) {
+    currentSelectedMonthKey = monthKey;
+    document.getElementById("selectedMonthAmount").innerHTML =
+      `₹${sentAmount.toFixed(2)}`;
+    document.getElementById("selectedMonthBadge").innerHTML = monthLabel;
+    renderLineChart(allMonthlyData, monthKey);
+    filterTransactionsByMonth(monthKey);
+  }
+
+  function filterTransactionsByMonth(monthKey) {
+    const container = document.getElementById("transactionHistoryContainer");
+    const [year, month] = monthKey.split("-");
+    const filtered = allTransactions.filter((tx) => {
+      if (!tx.created_at) return false;
+      const date = new Date(tx.created_at);
+      const txYear = date.getFullYear();
+      const txMonth = (date.getMonth() + 1).toString().padStart(2, "0");
+      return txYear.toString() === year && txMonth === month;
+    });
+
+    if (!filtered.length) {
+      container.innerHTML =
+        '<div class="empty-state"><i class="fas fa-inbox"></i><p>No transactions this month</p></div>';
+      return;
+    }
+
+    container.innerHTML = `
+            <div class="transaction-list">
+                ${filtered
+                  .sort(
+                    (a, b) => new Date(b.created_at) - new Date(a.created_at),
+                  )
+                  .map((tx) => {
+                    const isSent = tx.is_sent;
+                    const counterparty =
+                      tx.counterparty_name ||
+                      (isSent ? tx.receiver_name : tx.sender_name) ||
+                      "User";
+                    return `
+                        <div class="transaction-item">
+                            <div>
+                                <div class="transaction-counterparty">${window.escapeHtml(counterparty)}</div>
+                                <div style="font-size:0.7rem; color:#6b7280;">${new Date(tx.created_at).toLocaleDateString()}</div>
+                            </div>
+                            <div class="transaction-amount ${isSent ? "sent" : "received"}">
+                                ${isSent ? "-" : "+"} ${window.formatCurrency(tx.amount)}
+                                <div class="transaction-badge">${isSent ? "Sent" : "Received"}</div>
+                            </div>
+                        </div>
+                    `;
+                  })
+                  .join("")}
+            </div>
+        `;
+  }
+
+  async function initAnalytics() {
+    const monthlyApiData = await fetchMonthlyAnalytics();
+    allMonthlyData = buildMonthlyData(monthlyApiData);
+    allTransactions = await fetchAllTransactions();
+
+    if (!allMonthlyData.length) {
+      document.getElementById("monthsCarousel").innerHTML =
+        '<div style="padding:12px; color:#6b7280;">No transaction data</div>';
+      document.getElementById("selectedMonthAmount").innerHTML = "₹0";
+      return;
+    }
+
+    initMonthsCarousel(allMonthlyData);
+  }
+
+  initAnalytics();
+</script>
+{% endblock %}

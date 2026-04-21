@@ -1,0 +1,419 @@
+{% extends "base.html" %} {% block title %}All Transactions - Zoro Pay{%
+endblock %} {% block extra_styles %}
+<style>
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    flex: 1;
+    background: rgba(18, 18, 28, 0.7);
+    border-radius: 1.2rem;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid rgba(79, 70, 229, 0.3);
+  }
+  .stat-card.sent .stat-value {
+    color: #f43f5e;
+  }
+  .stat-card.received .stat-value {
+    color: #10b981;
+  }
+  .stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  .filter-chip {
+    background: #1e1e2c;
+    padding: 8px 20px;
+    border-radius: 40px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .filter-chip.active {
+    background: #4f46e5;
+  }
+  .transaction-group {
+    margin-bottom: 24px;
+  }
+  .group-header {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-bottom: 12px;
+  }
+  .txn-item {
+    background: #0f0f17;
+    border-radius: 1.2rem;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+  }
+  .txn-item.sent {
+    border-left-color: #f43f5e;
+  }
+  .txn-item.received {
+    border-left-color: #10b981;
+  }
+  .txn-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .txn-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .txn-icon.sent {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+  }
+  .txn-icon.received {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+  }
+  .txn-amount {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  .txn-amount.sent {
+    color: #f43f5e;
+  }
+  .txn-amount.received {
+    color: #10b981;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-content {
+    background: #111118;
+    border-radius: 2rem;
+    max-width: 400px;
+    width: 90%;
+    border: 1px solid #4f46e5;
+  }
+  .modal-header {
+    padding: 18px;
+    border-bottom: 1px solid #26263a;
+    display: flex;
+    justify-content: space-between;
+  }
+  .modal-body {
+    padding: 20px;
+  }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #1e1e2c;
+  }
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 2rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .modal-btn-whatsapp {
+    background: #25d366;
+    color: white;
+  }
+  .modal-btn-share {
+    background: #3b82f6;
+    color: white;
+  }
+  .modal-btn-download {
+    background: #1e1e2c;
+    color: white;
+    border: 1px solid #4f46e5;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <div class="page-header">
+    <button class="icon-btn" onclick="history.back()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1><i class="fas fa-history"></i> Transactions</h1>
+    <button class="icon-btn" onclick="downloadAllPDF()">
+      <i class="fas fa-download"></i>
+    </button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card sent">
+      <div style="font-size: 0.7rem; color: #9ca3af">Total Sent</div>
+      <div class="stat-value" id="totalSent">₹0</div>
+    </div>
+    <div class="stat-card received">
+      <div style="font-size: 0.7rem; color: #9ca3af">Total Received</div>
+      <div class="stat-value" id="totalReceived">₹0</div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-chip active" data-filter="all">All</div>
+    <div class="filter-chip" data-filter="sent">Sent</div>
+    <div class="filter-chip" data-filter="received">Received</div>
+  </div>
+
+  <div id="transactionsList">
+    <div class="empty-state">
+      <i class="fas fa-spinner fa-pulse"></i> Loading...
+    </div>
+  </div>
+</div>
+
+<div id="txnModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Transaction Details</h3>
+      <span onclick="closeModal()" style="font-size: 1.8rem; cursor: pointer"
+        >&times;</span
+      >
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  let allTx = [],
+    currentFilter = "all",
+    currentTransaction = null;
+
+  async function loadTx() {
+    try {
+      const res = await fetch("/api/transactions");
+      if (res.status === 401) {
+        window.location = "/";
+        return;
+      }
+      allTx = await res.json();
+      updateStats();
+      renderTx();
+    } catch (e) {
+      document.getElementById("transactionsList").innerHTML =
+        '<div class="empty-state">Error loading</div>';
+    }
+  }
+
+  function updateStats() {
+    let sent = 0,
+      rec = 0;
+    allTx.forEach((t) => {
+      if (t.is_sent) sent += t.amount;
+      else rec += t.amount;
+    });
+    document.getElementById("totalSent").innerHTML = `₹${sent.toFixed(2)}`;
+    document.getElementById("totalReceived").innerHTML = `₹${rec.toFixed(2)}`;
+  }
+
+  function renderTx() {
+    let filtered = allTx;
+    if (currentFilter === "sent") filtered = allTx.filter((t) => t.is_sent);
+    else if (currentFilter === "received")
+      filtered = allTx.filter((t) => !t.is_sent);
+
+    if (!filtered.length) {
+      document.getElementById("transactionsList").innerHTML =
+        '<div class="empty-state">No transactions</div>';
+      return;
+    }
+
+    const grouped = {};
+    filtered.forEach((t) => {
+      const date = new Date(t.created_at).toLocaleDateString();
+      if (!grouped[date]) grouped[date] = [];
+      grouped[date].push(t);
+    });
+
+    let html = "";
+    for (const [date, txns] of Object.entries(grouped)) {
+      html += `<div class="transaction-group"><div class="group-header"><i class="far fa-calendar"></i> ${date}</div>`;
+      txns.forEach((t) => {
+        const isSent = t.is_sent;
+        const name = isSent
+          ? t.receiver_name || t.receiver_phone || "User"
+          : t.sender_name || t.sender_phone || "User";
+        html += `<div class="txn-item ${isSent ? "sent" : "received"}" onclick='showDetail(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                            <div class="txn-left">
+                                <div class="txn-icon ${isSent ? "sent" : "received"}"><i class="fas ${isSent ? "fa-arrow-up" : "fa-arrow-down"}"></i></div>
+                                <div><div class="txn-name">${window.escapeHtml(name)}</div><div class="txn-date">${new Date(t.created_at).toLocaleTimeString()}</div></div>
+                            </div>
+                            <div class="txn-amount ${isSent ? "sent" : "received"}">${isSent ? "-" : "+"} ${window.formatCurrency(t.amount)}</div>
+                        </div>`;
+      });
+      html += "</div>";
+    }
+    document.getElementById("transactionsList").innerHTML = html;
+  }
+
+  function getShareMessageForTransaction(t) {
+    const isSent = t.is_sent;
+    const counterparty = isSent
+      ? t.receiver_name || t.receiver_phone || "User"
+      : t.sender_name || t.sender_phone || "User";
+    const date = new Date(t.created_at).toLocaleString();
+    let msg = `💰 ZORO PAY TRANSACTION\n━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `${isSent ? "💸 SENT" : "✅ RECEIVED"}\n━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `Amount: ${window.formatCurrency(t.amount)}\n`;
+    msg += `${isSent ? "To" : "From"}: ${counterparty}\n`;
+    msg += `ID: ${t.id}\n📅 ${date}\n`;
+    if (t.note) msg += `Note: ${t.note}\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━\nThank you for using Zoro Pay!`;
+    return msg;
+  }
+
+  async function shareTransaction() {
+    if (!currentTransaction) return;
+    const message = getShareMessageForTransaction(currentTransaction);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Zoro Pay Transaction", text: message });
+        return;
+      } catch (e) {}
+    }
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(message);
+      window.showNotification("📋 Copied!", "success");
+    }
+  }
+
+  function shareToWhatsApp() {
+    if (!currentTransaction) return;
+    const isSent = currentTransaction.is_sent;
+    const phoneNumber = isSent
+      ? currentTransaction.receiver_phone
+      : currentTransaction.sender_phone;
+    const message = getShareMessageForTransaction(currentTransaction);
+    if (phoneNumber) {
+      let cleanNumber = phoneNumber.toString().replace(/[^\d+]/g, "");
+      if (cleanNumber.startsWith("+")) cleanNumber = cleanNumber.substring(1);
+      window.open(
+        `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`,
+        "_blank",
+      );
+    } else {
+      shareTransaction();
+    }
+  }
+
+  function showDetail(t) {
+    currentTransaction = t;
+    const isSent = t.is_sent;
+    const counterparty = isSent
+      ? t.receiver_name || t.receiver_phone
+      : t.sender_name || t.sender_phone;
+    const hasPhoneNumber = !!(isSent ? t.receiver_phone : t.sender_phone);
+
+    document.getElementById("modalBody").innerHTML = `
+            <div class="detail-row"><span>ID</span><strong>${t.id}</strong></div>
+            <div class="detail-row"><span>Date</span><span>${new Date(t.created_at).toLocaleString()}</span></div>
+            <div class="detail-row"><span>${isSent ? "Paid To" : "Received From"}</span><span>${window.escapeHtml(counterparty || "User")}</span></div>
+            <div class="detail-row"><span>Amount</span><strong style="color:${isSent ? "#f43f5e" : "#10b981"}">${window.formatCurrency(t.amount)}</strong></div>
+            <div class="detail-row"><span>Note</span><span>${t.note || "-"}</span></div>
+            <div class="modal-buttons">
+                ${hasPhoneNumber ? `<button class="modal-btn modal-btn-whatsapp" onclick="shareToWhatsApp()"><i class="fab fa-whatsapp"></i> WhatsApp</button>` : ""}
+                <button class="modal-btn modal-btn-share" onclick="shareTransaction()"><i class="fas fa-share-alt"></i> Share</button>
+                <button class="modal-btn modal-btn-download" onclick="downloadReceiptFromModal('${t.id}')"><i class="fas fa-download"></i> Receipt</button>
+            </div>`;
+    document.getElementById("txnModal").style.display = "flex";
+  }
+
+  function downloadReceiptFromModal(transactionId) {
+    window.location.href = `/api/download_receipt/${transactionId}`;
+    window.showNotification("📄 Downloading receipt...", "success");
+  }
+
+  function closeModal() {
+    document.getElementById("txnModal").style.display = "none";
+    currentTransaction = null;
+  }
+
+  async function downloadAllPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFillColor(79, 70, 229);
+    doc.rect(0, 0, 210, 40, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.text("Zoro Pay - Transaction History", 105, 25, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 55);
+    let y = 70;
+    doc.text("Date", 20, y);
+    doc.text("Type", 60, y);
+    doc.text("Counterparty", 100, y);
+    doc.text("Amount", 160, y);
+    y += 8;
+    allTx.slice(0, 40).forEach((t) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(new Date(t.created_at).toLocaleDateString(), 20, y);
+      doc.text(t.is_sent ? "Sent" : "Received", 60, y);
+      doc.text((t.is_sent ? t.receiver_name : t.sender_name) || "User", 100, y);
+      doc.text(`₹${t.amount.toFixed(2)}`, 160, y);
+      y += 6;
+    });
+    doc.save(`zoropay_transactions.pdf`);
+  }
+
+  document.querySelectorAll(".filter-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      document
+        .querySelectorAll(".filter-chip")
+        .forEach((c) => c.classList.remove("active"));
+      chip.classList.add("active");
+      currentFilter = chip.dataset.filter;
+      renderTx();
+    });
+  });
+
+  window.closeModal = closeModal;
+  window.showDetail = showDetail;
+  window.shareTransaction = shareTransaction;
+  window.shareToWhatsApp = shareToWhatsApp;
+  window.downloadReceiptFromModal = downloadReceiptFromModal;
+  window.downloadAllPDF = downloadAllPDF;
+
+  loadTx();
+</script>
+{% endblock %}

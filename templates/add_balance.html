@@ -1,0 +1,507 @@
+{% extends "base.html" %} {% block title %}Add Money - Zoro Pay{% endblock %} {%
+block extra_styles %}
+<style>
+  .balance-glass {
+    background: linear-gradient(145deg, #1e1e30, #0f0f1a);
+    border-radius: 2rem;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 24px;
+    border: 1px solid rgba(79, 70, 229, 0.3);
+  }
+  .balance-amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #a78bfa;
+  }
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .preset-btn {
+    background: #0f0f17;
+    border: 1.5px solid #2d2d44;
+    padding: 14px;
+    border-radius: 1.2rem;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+  .preset-btn:hover {
+    background: #1a1a2a;
+    border-color: #4f46e5;
+    transform: translateY(-2px);
+  }
+  .preset-btn.active {
+    background: #4f46e5;
+    border-color: #4f46e5;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  }
+  .input-field {
+    width: 100%;
+    padding: 14px 18px;
+    background: #0a0a10;
+    border: 1.5px solid #2d2d44;
+    border-radius: 1.2rem;
+    color: white;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    margin: 12px 0;
+  }
+  .input-field:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  }
+  .input-field::placeholder {
+    color: #6b7280;
+  }
+  .amount-summary {
+    background: #0f0f17;
+    border-radius: 1.2rem;
+    padding: 12px 16px;
+    margin: 16px 0 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 3px solid #4f46e5;
+  }
+  .amount-summary span:first-child {
+    color: #9ca3af;
+  }
+  .amount-summary span:last-child {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #a78bfa;
+  }
+  .pin-card-standalone {
+    background: rgba(18, 18, 28, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 2rem;
+    padding: 1.8rem;
+    border: 1px solid rgba(79, 70, 229, 0.6);
+    animation: slideUp 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .pin-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 1rem;
+    color: #cbd5e1;
+    border-bottom: 1px solid #26263a;
+    padding-bottom: 12px;
+  }
+  .pin-dots {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    margin: 25px 0;
+  }
+  .pin-dot {
+    width: 16px;
+    height: 16px;
+    background: #2d2d44;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+  .pin-dot.filled {
+    background: #4f46e5;
+    transform: scale(1.25);
+    box-shadow: 0 0 8px #6366f1;
+  }
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0 10px;
+  }
+  .keypad-btn {
+    background: #1e1e2c;
+    border: none;
+    padding: 18px;
+    border-radius: 60px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.08s linear;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+  .keypad-btn:active {
+    background: #4f46e5;
+    transform: scale(0.94);
+  }
+  .hidden {
+    display: none;
+  }
+  .pin-error-msg {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    padding: 10px;
+    border-radius: 1rem;
+    margin-top: 12px;
+    text-align: center;
+    font-size: 0.8rem;
+    border-left: 2px solid #ef4444;
+  }
+  .error-shake {
+    animation: shake 0.3s ease-in-out 0s 2;
+  }
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-5px);
+    }
+    75% {
+      transform: translateX(5px);
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container">
+  <div class="page-header">
+    <button class="icon-btn" onclick="history.back()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1><i class="fas fa-plus-circle"></i> Add Money</h1>
+    <div style="width: 44px"></div>
+  </div>
+
+  <div class="balance-glass">
+    <p style="color: #9ca3af; margin-bottom: 8px">
+      <i class="fas fa-wallet"></i> Current Balance
+    </p>
+    <div class="balance-amount" id="currentBalance">₹0.00</div>
+  </div>
+
+  <div class="glass-card" id="amountCard" style="padding: 1.8rem">
+    <h3 style="margin-bottom: 12px">
+      <i class="fas fa-bolt"></i> Quick Amount
+    </h3>
+    <div class="preset-grid">
+      <div class="preset-btn" data-amount="100">₹100</div>
+      <div class="preset-btn" data-amount="500">₹500</div>
+      <div class="preset-btn" data-amount="1000">₹1,000</div>
+      <div class="preset-btn" data-amount="2000">₹2,000</div>
+      <div class="preset-btn" data-amount="5000">₹5,000</div>
+      <div class="preset-btn" data-amount="10000">₹10,000</div>
+    </div>
+
+    <h3 style="margin: 20px 0 8px">
+      <i class="fas fa-edit"></i> Custom Amount
+    </h3>
+    <input
+      type="number"
+      id="customAmount"
+      class="input-field"
+      placeholder="Enter amount (min ₹1, max ₹50,000)"
+      step="1"
+      min="1"
+      max="50000"
+    />
+
+    <div id="amountPreview" class="amount-summary" style="display: none">
+      <span><i class="fas fa-rupee-sign"></i> Amount to add:</span>
+      <span id="previewValue">₹0</span>
+    </div>
+
+    <button id="addBalanceBtn" class="btn-primary" style="width: 100%">
+      <i class="fas fa-plus-circle"></i> Add Balance
+    </button>
+  </div>
+
+  <div id="pinSectionContainer"></div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script>
+  let currentBalance = 0,
+    selectedAmount = 0,
+    pinLength = 4,
+    currentPin = "",
+    isPinActive = false;
+
+  async function loadBalance() {
+    try {
+      const res = await fetch("/api/user");
+      const user = await res.json();
+      currentBalance = user.balance || 0;
+      document.getElementById("currentBalance").innerHTML =
+        window.formatCurrency(currentBalance);
+      const pinRes = await fetch("/api/user_pin_length");
+      const pinData = await pinRes.json();
+      pinLength = pinData.pin_length || 4;
+    } catch (e) {
+      currentBalance = 0;
+      document.getElementById("currentBalance").innerHTML =
+        window.formatCurrency(0);
+      pinLength = 4;
+    }
+  }
+
+  function getValidatedAmount() {
+    let amount = 0;
+    const activePreset = document.querySelector(".preset-btn.active");
+    const customValue = document.getElementById("customAmount").value;
+    if (activePreset) amount = parseFloat(activePreset.dataset.amount);
+    else if (customValue && customValue.trim() !== "")
+      amount = parseFloat(customValue);
+
+    if (isNaN(amount) || amount <= 0) {
+      window.showNotification("Please select or enter a valid amount", "error");
+      return null;
+    }
+    if (amount < 1) {
+      window.showNotification("Minimum amount is ₹1", "error");
+      return null;
+    }
+    if (amount > 50000) {
+      window.showNotification(
+        "Maximum amount is ₹50,000 per transaction",
+        "error",
+      );
+      return null;
+    }
+    return amount;
+  }
+
+  function updatePreview() {
+    let amount = 0;
+    const activePreset = document.querySelector(".preset-btn.active");
+    const customValue = document.getElementById("customAmount").value;
+    if (activePreset) amount = parseFloat(activePreset.dataset.amount);
+    else if (customValue && customValue.trim() !== "")
+      amount = parseFloat(customValue);
+
+    const previewDiv = document.getElementById("amountPreview");
+    if (amount > 0 && !isNaN(amount)) {
+      document.getElementById("previewValue").innerHTML =
+        window.formatCurrency(amount);
+      previewDiv.style.display = "flex";
+    } else {
+      previewDiv.style.display = "none";
+    }
+  }
+
+  function showStandalonePinSection(amount) {
+    if (isPinActive) return;
+    selectedAmount = amount;
+    document.getElementById("amountCard").classList.add("hidden");
+
+    const container = document.getElementById("pinSectionContainer");
+    container.innerHTML = `
+            <div class="pin-card-standalone" id="pinCardStandalone">
+                <div class="pin-header">
+                    <i class="fas fa-shield-alt" style="color:#4f46e5;"></i>
+                    <span><strong>Secure PIN Verification</strong></span>
+                </div>
+                <div class="amount-summary" style="background:#0a0a10; margin-bottom:16px;">
+                    <span><i class="fas fa-rupee-sign"></i> Amount to add</span>
+                    <span style="font-size:1.3rem;" id="pinAmountDisplay">${window.formatCurrency(selectedAmount)}</span>
+                </div>
+                <div class="pin-dots" id="pinDotsStandalone"></div>
+                <div class="keypad" id="keypadStandalone"></div>
+                <button id="cancelPinStandaloneBtn" class="btn-secondary" style="width:100%; margin-top:10px;">
+                    <i class="fas fa-arrow-left"></i> Back to Amount Selection
+                </button>
+                <button id="confirmPinStandaloneBtn" class="btn-primary" style="width:100%; margin-top:10px;">
+                    <i class="fas fa-check-circle"></i> Confirm & Add Balance
+                </button>
+            </div>
+        `;
+
+    initStandalonePinUI();
+
+    document
+      .getElementById("confirmPinStandaloneBtn")
+      .addEventListener("click", () => {
+        if (currentPin.length === pinLength) confirmAddBalance();
+        else
+          window.showNotification(
+            `Please enter your ${pinLength}-digit PIN`,
+            "error",
+          );
+      });
+
+    document
+      .getElementById("cancelPinStandaloneBtn")
+      .addEventListener("click", () => {
+        document.getElementById("amountCard").classList.remove("hidden");
+        container.innerHTML = "";
+        isPinActive = false;
+        currentPin = "";
+      });
+
+    isPinActive = true;
+    currentPin = "";
+    updateStandaloneDots();
+  }
+
+  function initStandalonePinUI() {
+    const dotsDiv = document.getElementById("pinDotsStandalone");
+    dotsDiv.innerHTML = "";
+    for (let i = 0; i < pinLength; i++) {
+      dotsDiv.innerHTML += '<div class="pin-dot"></div>';
+    }
+    generateStandaloneKeypad();
+  }
+
+  function generateStandaloneKeypad() {
+    const keys = [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      '<i class="fas fa-backspace"></i>',
+      "0",
+      '<i class="fas fa-check"></i>',
+    ];
+    const pad = document.getElementById("keypadStandalone");
+    pad.innerHTML = "";
+    keys.forEach((k) => {
+      const btn = document.createElement("button");
+      btn.className = "keypad-btn";
+      btn.innerHTML = k;
+      btn.onclick = () => handleStandalonePinInput(k);
+      pad.appendChild(btn);
+    });
+  }
+
+  function handleStandalonePinInput(val) {
+    const dotsContainer = document.getElementById("pinDotsStandalone");
+    if (dotsContainer) dotsContainer.classList.remove("error-shake");
+
+    if (val === '<i class="fas fa-backspace"></i>') {
+      if (currentPin.length > 0) {
+        currentPin = currentPin.slice(0, -1);
+        updateStandaloneDots();
+      }
+    } else if (val === '<i class="fas fa-check"></i>') {
+      if (currentPin.length === pinLength) confirmAddBalance();
+      else if (currentPin.length > 0 && currentPin.length < pinLength) {
+        window.showNotification(`PIN must be ${pinLength} digits`, "error");
+      } else {
+        window.showNotification(`Enter ${pinLength}-digit PIN`, "error");
+      }
+    } else if (/^\d$/.test(val) && currentPin.length < pinLength) {
+      currentPin += val;
+      updateStandaloneDots();
+      if (currentPin.length === pinLength) {
+        setTimeout(() => confirmAddBalance(), 150);
+      }
+    }
+  }
+
+  function updateStandaloneDots() {
+    const dots = document.querySelectorAll("#pinDotsStandalone .pin-dot");
+    for (let i = 0; i < dots.length; i++) {
+      if (i < currentPin.length) dots[i].classList.add("filled");
+      else dots[i].classList.remove("filled");
+    }
+  }
+
+  async function confirmAddBalance() {
+    if (currentPin.length !== pinLength) return;
+
+    const confirmBtn = document.getElementById("confirmPinStandaloneBtn");
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML =
+      '<span class="loading-spinner"></span> Processing...';
+
+    try {
+      const res = await fetch("/api/add_balance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: selectedAmount,
+          pin: currentPin,
+          payment_method: "wallet",
+        }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        window.showNotification(
+          `✅ ${window.formatCurrency(selectedAmount)} added successfully!`,
+          "success",
+        );
+        setTimeout(() => (window.location.href = "/dashboard"), 1500);
+      } else {
+        window.showNotification(
+          data.error || "Transaction failed. Incorrect PIN.",
+          "error",
+        );
+        currentPin = "";
+        updateStandaloneDots();
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
+      }
+    } catch (e) {
+      window.showNotification("Network error. Please try again.", "error");
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = originalText;
+    }
+  }
+
+  // Event Listeners
+  document.querySelectorAll(".preset-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (isPinActive) return;
+      document
+        .querySelectorAll(".preset-btn")
+        .forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("customAmount").value = btn.dataset.amount;
+      updatePreview();
+    });
+  });
+
+  document.getElementById("customAmount").addEventListener("input", () => {
+    if (isPinActive) return;
+    document
+      .querySelectorAll(".preset-btn")
+      .forEach((b) => b.classList.remove("active"));
+    updatePreview();
+
+    let val = parseFloat(document.getElementById("customAmount").value);
+    if (val > 50000) {
+      document.getElementById("customAmount").value = 50000;
+      updatePreview();
+      window.showNotification("Maximum limit is ₹50,000", "error");
+    }
+    if (val < 0) document.getElementById("customAmount").value = "";
+  });
+
+  document.getElementById("addBalanceBtn").addEventListener("click", () => {
+    if (isPinActive) return;
+    const amount = getValidatedAmount();
+    if (amount !== null) showStandalonePinSection(amount);
+  });
+
+  loadBalance();
+</script>
+{% endblock %}

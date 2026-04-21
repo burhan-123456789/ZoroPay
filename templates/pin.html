@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Enter PIN - Zoro Pay</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
+      }
+      body {
+        background: radial-gradient(circle at 30% 20%, #0a0a0f, #000);
+        font-family: "Inter", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .pin-container {
+        max-width: 400px;
+        width: 100%;
+        background: rgba(18, 18, 28, 0.8);
+        backdrop-filter: blur(20px);
+        border-radius: 2.5rem;
+        padding: 2rem;
+        text-align: center;
+        border: 1px solid rgba(79, 70, 229, 0.4);
+        animation: fadeIn 0.5s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .user-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(145deg, #4f46e5, #7c3aed);
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+        }
+      }
+      .user-name {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .user-phone {
+        font-size: 0.8rem;
+        color: #9ca3af;
+        margin-bottom: 1.5rem;
+      }
+      .pin-title {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+      }
+      .pin-subtitle {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-bottom: 1.5rem;
+      }
+      .pin-dots {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 2rem;
+      }
+      .pin-dot {
+        width: 16px;
+        height: 16px;
+        background: #2d2d44;
+        border-radius: 50%;
+        transition: 0.2s;
+      }
+      .pin-dot.filled {
+        background: #4f46e5;
+        transform: scale(1.2);
+        box-shadow: 0 0 8px #4f46e5;
+      }
+      .keypad {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 1.5rem;
+      }
+      .keypad-btn {
+        background: #1e1e2c;
+        border: none;
+        padding: 18px;
+        border-radius: 60px;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: white;
+        cursor: pointer;
+        transition: 0.1s;
+      }
+      .keypad-btn:active {
+        background: #4f46e5;
+        transform: scale(0.96);
+      }
+      .biometric-btn {
+        background: linear-gradient(95deg, #4f46e5, #6366f1);
+        border: none;
+        padding: 14px;
+        border-radius: 2rem;
+        font-weight: 600;
+        color: white;
+        font-size: 0.9rem;
+        cursor: pointer;
+        margin-top: 1rem;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+      }
+      .biometric-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+      }
+      .biometric-btn:active {
+        transform: scale(0.98);
+      }
+      .biometric-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .forgot-link {
+        color: #818cf8;
+        font-size: 0.75rem;
+        text-decoration: none;
+        display: block;
+        margin-top: 1rem;
+        transition: color 0.2s;
+      }
+      .forgot-link:hover {
+        color: #a78bfa;
+      }
+      .error-msg {
+        background: rgba(220, 38, 38, 0.15);
+        border: 1px solid #ef4444;
+        border-radius: 1rem;
+        padding: 10px;
+        margin-top: 1rem;
+        font-size: 0.75rem;
+        color: #f87171;
+        display: none;
+        animation: shake 0.5s ease;
+      }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+      }
+      .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 1rem 0;
+        color: #6b7280;
+        font-size: 0.75rem;
+      }
+      .divider::before,
+      .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #2d2d44;
+      }
+      .divider::before {
+        margin-right: 0.5rem;
+      }
+      .divider::after {
+        margin-left: 0.5rem;
+      }
+      .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.6s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      .success-check {
+        animation: checkmark 0.5s ease;
+      }
+      @keyframes checkmark {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="pin-container">
+      <div class="user-avatar" id="userAvatar">👤</div>
+      <div class="user-name" id="userName">Loading...</div>
+      <div class="user-phone" id="userPhone">-</div>
+      <div class="pin-title">Enter your PIN</div>
+      <div class="pin-subtitle">To access your account</div>
+      <div class="pin-dots" id="pinDots"></div>
+      <div class="keypad" id="keypad"></div>
+      
+      <div class="divider" id="divider" style="display: none;">OR</div>
+      
+      <button class="biometric-btn" id="biometricBtn" style="display: none;">
+        <i class="fas fa-fingerprint"></i> Use Biometric
+      </button>
+      
+      <a href="#" class="forgot-link" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i> Use different number
+      </a>
+      <div id="errorMsg" class="error-msg"></div>
+    </div>
+
+    <script>
+      let currentPin = "";
+      let pinLength = 4;
+      let userData = null;
+      let biometricEnabled = false;
+      let biometricCredentialId = null;
+      let isSubmitting = false;
+
+      async function loadUser() {
+        const phone = sessionStorage.getItem("pendingUserPhone");
+        if (!phone) {
+          window.location.href = "/";
+          return;
+        }
+        
+        try {
+          const res = await fetch("/api/get_user_by_phone", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone }),
+          });
+          const data = await res.json();
+          
+          if (data.user) {
+            userData = data.user;
+            pinLength = data.pin_length || 4;
+            document.getElementById("userName").innerText = userData.name;
+            document.getElementById("userPhone").innerText = userData.phone.replace("+91", "");
+            document.getElementById("userAvatar").innerHTML = userData.name.charAt(0).toUpperCase();
+            
+            // Check if biometric is enabled for this user (using phone number, no auth required)
+            await checkBiometricStatus(phone);
+            
+            initPinUI();
+            
+            // Auto-trigger biometric if available and enabled
+            if (biometricEnabled) {
+              // Small delay to ensure UI is ready
+              setTimeout(() => {
+                authenticateWithBiometric();
+              }, 1000);
+            }
+          } else {
+            window.location.href = "/";
+          }
+        } catch (e) {
+          console.error("Load user error:", e);
+          window.location.href = "/";
+        }
+      }
+
+      async function checkBiometricStatus(phone) {
+        try {
+          // Use a public endpoint that doesn't require authentication
+          const res = await fetch("/api/biometric/public_status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: phone }),
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            biometricEnabled = data.enabled;
+            
+            if (data.credentials && data.credentials.length > 0) {
+              biometricCredentialId = data.credentials[0].credential_id;
+            }
+            
+            const biometricBtn = document.getElementById("biometricBtn");
+            const divider = document.getElementById("divider");
+            
+            // Check if WebAuthn is supported
+            const isWebAuthnSupported = window.PublicKeyCredential && 
+              typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function';
+            
+            if (biometricEnabled && biometricCredentialId && isWebAuthnSupported) {
+              const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+              if (available) {
+                biometricBtn.style.display = "flex";
+                divider.style.display = "flex";
+                
+                // Add a subtle animation to biometric button
+                biometricBtn.style.animation = "pulse 2s infinite";
+              } else {
+                biometricBtn.style.display = "none";
+                divider.style.display = "none";
+              }
+            } else {
+              biometricBtn.style.display = "none";
+              divider.style.display = "none";
+            }
+          } else {
+            console.log("Biometric status check failed");
+            document.getElementById("biometricBtn").style.display = "none";
+            document.getElementById("divider").style.display = "none";
+          }
+        } catch (e) {
+          console.log("Biometric check failed:", e);
+          document.getElementById("biometricBtn").style.display = "none";
+          document.getElementById("divider").style.display = "none";
+        }
+      }
+
+      async function authenticateWithBiometric() {
+        if (isSubmitting) return;
+        
+        if (!window.PublicKeyCredential) {
+          showError("Biometric authentication not supported on this device");
+          return;
+        }
+
+        if (!biometricCredentialId) {
+          showError("Biometric not set up. Please use PIN.");
+          return;
+        }
+
+        const biometricBtn = document.getElementById("biometricBtn");
+        const originalText = biometricBtn.innerHTML;
+        biometricBtn.disabled = true;
+        biometricBtn.innerHTML = '<div class="loading-spinner"></div> Authenticating...';
+
+        try {
+          // Generate random challenge
+          const challenge = new Uint8Array(32);
+          crypto.getRandomValues(challenge);
+
+          // Convert credential ID from base64 to buffer
+          const credentialIdBuffer = Uint8Array.from(atob(biometricCredentialId), c => c.charCodeAt(0));
+
+          // Get the current domain for WebAuthn
+          let rpId = window.location.hostname;
+          // For localhost, WebAuthn requires exact "localhost"
+          if (rpId === 'localhost' || rpId === '127.0.0.1') {
+            rpId = 'localhost';
+          }
+
+          console.log("WebAuthn RP ID for verification:", rpId);
+
+          const assertion = await navigator.credentials.get({
+            publicKey: {
+              challenge: challenge,
+              rpId: rpId,
+              allowCredentials: [{
+                id: credentialIdBuffer,
+                type: "public-key",
+                transports: ["internal", "hybrid"],
+              }],
+              timeout: 60000,
+              userVerification: "required",
+            }
+          });
+
+          if (assertion) {
+            // Prepare verification data
+            const authData = {
+              phone: userData.phone,
+              credential_id: biometricCredentialId,
+              signature: btoa(String.fromCharCode(...new Uint8Array(assertion.response.signature))),
+              authenticator_data: btoa(String.fromCharCode(...new Uint8Array(assertion.response.authenticatorData))),
+              client_data_json: btoa(String.fromCharCode(...new Uint8Array(assertion.response.clientDataJSON))),
+            };
+
+            isSubmitting = true;
+            const res = await fetch("/api/biometric/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(authData),
+            });
+
+            const data = await res.json();
+            
+            if (res.ok) {
+              // Show success animation
+              const avatar = document.getElementById("userAvatar");
+              avatar.classList.add("success-check");
+              
+              localStorage.setItem("user", JSON.stringify(data.user));
+              if (data.token) localStorage.setItem("jwt_token", data.token);
+              sessionStorage.removeItem("redirectAfterLogin");
+              sessionStorage.removeItem("pendingUserPhone");
+              
+              setTimeout(() => {
+                window.location.href = "/dashboard";
+              }, 500);
+            } else {
+              showError(data.error || "Biometric verification failed");
+              biometricBtn.disabled = false;
+              biometricBtn.innerHTML = originalText;
+              isSubmitting = false;
+            }
+          } else {
+            biometricBtn.disabled = false;
+            biometricBtn.innerHTML = originalText;
+          }
+        } catch (err) {
+          console.error("Biometric auth error:", err);
+          if (err.name === "NotAllowedError") {
+            showError("Biometric authentication cancelled or failed");
+          } else if (err.name === "InvalidStateError") {
+            showError("Biometric credential not found. Please set up again.");
+            // Disable biometric for this user via public endpoint
+            await fetch("/api/biometric/public_disable", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ phone: userData.phone })
+            });
+            biometricEnabled = false;
+            document.getElementById("biometricBtn").style.display = "none";
+            document.getElementById("divider").style.display = "none";
+          } else {
+            showError("Biometric authentication error: " + err.message);
+          }
+          biometricBtn.disabled = false;
+          biometricBtn.innerHTML = originalText;
+          isSubmitting = false;
+        }
+      }
+
+      function initPinUI() {
+        const dotsDiv = document.getElementById("pinDots");
+        dotsDiv.innerHTML = "";
+        for (let i = 0; i < pinLength; i++) {
+          dotsDiv.innerHTML += '<div class="pin-dot"></div>';
+        }
+        generateKeypad();
+      }
+
+      function generateKeypad() {
+        const keys = [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          '<i class="fas fa-backspace"></i>',
+          "0",
+          '<i class="fas fa-check"></i>',
+        ];
+        const pad = document.getElementById("keypad");
+        pad.innerHTML = "";
+        keys.forEach((k) => {
+          const btn = document.createElement("button");
+          btn.className = "keypad-btn";
+          btn.innerHTML = k;
+          btn.onclick = () => handleKey(k);
+          pad.appendChild(btn);
+        });
+      }
+
+      function handleKey(val) {
+        if (isSubmitting) return;
+        
+        if (val === '<i class="fas fa-backspace"></i>') {
+          currentPin = currentPin.slice(0, -1);
+          updateDots();
+        } else if (val === '<i class="fas fa-check"></i>') {
+          if (currentPin.length === pinLength) verifyPin();
+        } else if (currentPin.length < pinLength) {
+          currentPin += val;
+          updateDots();
+          
+          // Auto-submit when PIN reaches required length
+          if (currentPin.length === pinLength) {
+            verifyPin();
+          }
+        }
+      }
+
+      function updateDots() {
+        const dots = document.querySelectorAll(".pin-dot");
+        for (let i = 0; i < dots.length; i++) {
+          if (i < currentPin.length) {
+            dots[i].classList.add("filled");
+          } else {
+            dots[i].classList.remove("filled");
+          }
+        }
+      }
+
+      async function verifyPin() {
+        if (isSubmitting) return;
+        
+        const errorDiv = document.getElementById("errorMsg");
+        
+        // Disable all keypad buttons while verifying
+        const allButtons = document.querySelectorAll(".keypad-btn");
+        allButtons.forEach(btn => {
+          btn.style.opacity = "0.5";
+          btn.style.pointerEvents = "none";
+        });
+        
+        isSubmitting = true;
+        
+        try {
+          const res = await fetch("/api/verify_pin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: userData.phone, pin: currentPin }),
+          });
+          
+          const data = await res.json();
+          
+          if (res.ok) {
+            // Show success animation
+            const avatar = document.getElementById("userAvatar");
+            avatar.classList.add("success-check");
+            
+            localStorage.setItem("user", JSON.stringify(data.user));
+            if (data.token) localStorage.setItem("jwt_token", data.token);
+            sessionStorage.removeItem("redirectAfterLogin");
+            sessionStorage.removeItem("pendingUserPhone");
+            
+            // Redirect with a small delay to show success animation
+            setTimeout(() => {
+              window.location.href = "/dashboard";
+            }, 500);
+          } else {
+            errorDiv.style.display = "block";
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + (data.error || "Invalid PIN");
+            
+            // Shake the pin container
+            const container = document.querySelector(".pin-container");
+            container.style.animation = "shake 0.5s ease";
+            setTimeout(() => {
+              container.style.animation = "fadeIn 0.5s ease";
+            }, 500);
+            
+            // Clear PIN and reset
+            currentPin = "";
+            updateDots();
+            
+            // Re-enable buttons
+            allButtons.forEach(btn => {
+              btn.style.opacity = "1";
+              btn.style.pointerEvents = "auto";
+            });
+            
+            setTimeout(() => {
+              errorDiv.style.display = "none";
+            }, 2000);
+            
+            isSubmitting = false;
+          }
+        } catch (e) {
+          errorDiv.style.display = "block";
+          errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Network error. Please try again.';
+          currentPin = "";
+          updateDots();
+          
+          // Re-enable buttons
+          allButtons.forEach(btn => {
+            btn.style.opacity = "1";
+            btn.style.pointerEvents = "auto";
+          });
+          
+          setTimeout(() => {
+            errorDiv.style.display = "none";
+          }, 3000);
+          
+          isSubmitting = false;
+        }
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById("errorMsg");
+        errorDiv.style.display = "block";
+        errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + message;
+        
+        const container = document.querySelector(".pin-container");
+        container.style.animation = "shake 0.5s ease";
+        setTimeout(() => {
+          container.style.animation = "fadeIn 0.5s ease";
+        }, 500);
+        
+        setTimeout(() => {
+          errorDiv.style.display = "none";
+        }, 3000);
+      }
+
+      function goBack() {
+        sessionStorage.removeItem("pendingUserPhone");
+        window.location.href = "/";
+      }
+
+      // Add event listener for biometric button
+      document.getElementById("biometricBtn").addEventListener("click", authenticateWithBiometric);
+      
+      // Load user data
+      loadUser();
+    </script>
+  </body>
+</html>
